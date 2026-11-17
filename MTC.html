@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTC Processing Dashboard</title>
+    <style>
+        :root { --primary: #2b6cb0; --primary-light: #ebf8ff; --bg: #f4f6f8; --card-bg: #ffffff; --border: #e2e8f0; --text-dark: #1a202c; --text-muted: #4a5568; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg); margin: 0; padding: 24px; color: var(--text-dark); }
+        .container { max-width: 1300px; margin: auto; }
+        
+        .header-box { background: var(--card-bg); padding: 18px 24px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .header-box h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-dark); }
+        
+        .controls-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .user-tag-box { display: flex; align-items: center; gap: 6px; background: #edf2f7; padding: 6px 12px; border-radius: 20px; border: 1px solid #cbd5e0; }
+        .user-tag-box label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .user-tag-box input { border: none; background: transparent; font-size: 13.5px; font-weight: 700; color: var(--primary); width: 140px; outline: none; }
+        
+        .tab-group { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 28px; }
+        .tab-btn { border: none; background: transparent; padding: 8px 16px; border-radius: 24px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-weight: 700; }
+
+        .table-card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
+        table.master-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        table.master-table th { background: #f8fafc; color: var(--text-muted); padding: 12px 14px; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 11.5px; }
+        table.master-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        table.master-table tr:hover td { background-color: #f1f5f9; }
+        table.master-table tr.selected td { background-color: var(--primary-light); font-weight: 600; color: var(--primary); }
+
+        .review-card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); padding: 24px; display: none; }
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; color: var(--primary); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+        .stat-box .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-box .stat-val { font-size: 14.5px; font-weight: 700; color: var(--text-dark); }
+        .stat-box.highlight { background: #fff5f5; border-color: #feb2b2; }
+        .stat-box.highlight .stat-val { color: #c53030; }
+
+        .link-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-weight: 600; font-size: 13px; text-decoration: none; padding: 8px 12px; background: var(--primary-light); border-radius: 6px; margin-right: 8px; margin-bottom: 8px;}
+        .link-btn:hover { text-decoration: underline; }
+        .no-doc { color: #a0aec0; font-size: 13px; }
+
+        .item-details-box { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .box-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        
+        table.items-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        table.items-table th { background: #f8fafc; color: #475569; padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        table.items-table td { padding: 16px 14px; border-bottom: 1px solid #f1f5f9; color: var(--text-dark); vertical-align: middle; }
+        
+        .tag-heat { background: #f1f5f9; border: 1px solid #cbd5e0; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12.5px; color: #4a5568; white-space: nowrap; display: inline-block;}
+        .tag-plate { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12.5px; white-space: nowrap; display: inline-block;}
+        
+        .input-tc { padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; font-weight: 600; width: 140px; color: var(--text-dark); outline: none; transition: 0.2s;}
+        .input-tc:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(43,108,176,0.2); }
+        .input-file { font-size: 12px; width: 200px; cursor: pointer; }
+
+        .btn-container { display: flex; gap: 14px; margin-top: 20px;}
+        .btn-action { flex: 1; padding: 16px; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; color: #fff; background-color: var(--primary); transition: 0.2s;}
+        .btn-action:hover { opacity: 0.9; }
+        .btn-whatsapp { background-color: #25D366; display: none; }
+        
+        #statusMsg { text-align: center; font-size: 14px; font-weight: 700; margin-top: 14px; display: none; }
+        .empty-hint { text-align: center; color: var(--text-muted); padding: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <h2>MTC Processing Dashboard</h2>
+        <div class="controls-right">
+            <div class="user-tag-box">
+                <label>MTC Person:</label>
+                <input type="text" id="formFilledBy" placeholder="Your Name" autocomplete="name">
+            </div>
+            <div class="tab-group">
+                <button class="tab-btn active" id="tabPending" onclick="switchTab('pending')">Pending TCs (<span id="pendingCount">0</span>)</button>
+                <button class="tab-btn" id="tabCompleted" onclick="switchTab('completed')">Completed (<span id="completedCount">0</span>)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <table class="master-table">
+            <thead>
+                <tr id="tableHeaders">
+                    <th>PO Number</th>
+                    <th>Client Name</th>
+                    <th>PO Date</th>
+                    <th>Delivery Date</th>
+                    <th>Sales Person</th>
+                    <th>Pieces Pending</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <tr><td colspan="6" class="empty-hint">Loading data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="review-card" id="processingForm">
+        <div class="section-title" id="formMainTitle">Order Specifications & TC Upload</div>
+
+        <div id="poDocContainer" style="margin-bottom: 20px;"><span class="no-doc">Loading documents...</span></div>
+
+        <div class="stats-grid">
+            <div class="stat-box highlight">
+                <div class="stat-label">MTC Requirement</div>
+                <div class="stat-val" id="dispMtcReq">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">PO Number & Date</div>
+                <div class="stat-val" id="dispPoInfo">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Client Name</div>
+                <div class="stat-val" id="dispClient">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Sales / Delivery</div>
+                <div class="stat-val" id="dispSalesDel">-</div>
+            </div>
+        </div>
+
+        <div id="itemsContainer"></div>
+
+        <div class="btn-container">
+            <button class="btn-action" id="btnSave" onclick="saveToSheet()">Upload & Save MTC</button>
+            <button class="btn-action btn-whatsapp" id="btnWhatsApp" onclick="shareWhatsApp()">WhatsApp Share</button>
+        </div>
+        <div id="statusMsg"></div>
+    </div>
+</div>
+
+<script>
+    // ⚠️ PASTE YOUR ACTIVE MTC APPS SCRIPT DEPLOYMENT URL HERE
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz07LUsj-30uw2lf1WILPF-5wlqjGuqTj28X22PAhs8sXkeNJ5itbScU7KIUb5yyS9F/exec";
+
+    let pendingOrders = [];
+    let completedOrders = [];
+    let currentTab = "pending";
+    let selectedOrder = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedName = localStorage.getItem("mtc_filled_by");
+        if (savedName) document.getElementById('formFilledBy').value = savedName;
+        loadData();
+    });
+
+    document.getElementById('formFilledBy').addEventListener('input', (e) => {
+        localStorage.setItem("mtc_filled_by", e.target.value.trim());
+    });
+
+    function loadData() {
+        fetch(WEB_APP_URL)	
+            .then(res => res.json())
+            .then(data => {
+                pendingOrders = data.pending || [];
+                completedOrders = data.completed || [];
+                document.getElementById('pendingCount').textContent = pendingOrders.length;
+                document.getElementById('completedCount').textContent = completedOrders.length;
+                renderTable();
+            });
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
+        document.getElementById('tabCompleted').classList.toggle('active', tab === 'completed');
+        
+        const thead = document.getElementById('tableHeaders');
+        if (tab === 'completed') {
+            thead.innerHTML = `<th>Date Processed</th><th>PO Number</th><th>Client Name</th><th>TC Numbers</th><th>Filled By</th>`;
+        } else {
+            thead.innerHTML = `<th>PO Number</th><th>Client Name</th><th>PO Date</th><th>Delivery Date</th><th>Sales Person</th><th>Pieces Pending</th>`;
+        }
+        resetWorkspace();
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('ordersTableBody');
+        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-hint">No ${currentTab} items found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach((order, index) => {
+            const tr = document.createElement('tr');
+            if (currentTab === 'pending') {
+                tr.innerHTML = `
+                    <td><b>${order.poNumber || "-"}</b></td>
+                    <td>${order.client}</td>
+                    <td>${order.poDate || "-"}</td>
+                    <td>${order.deliveryDate || "-"}</td>
+                    <td>${order.salesPerson || "-"}</td>
+                    <td><span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-weight:700; color: #c53030;">${(order.items || []).length} Logs</span></td>
+                `;
+            } else {
+                let tcs = (order.tcNumbers || "-").toString().replace(/\n/g, ' ');
+                if (tcs.length > 30) tcs = tcs.substring(0, 30) + "...";
+                const renderTime = (order.timestamp || "-").split(' ')[0];
+                tr.innerHTML = `
+                    <td><b>${renderTime}</b></td>
+                    <td><b>${order.poNumber || "-"}</b></td>
+                    <td>${order.client}</td>
+                    <td><span style="color: #2b6cb0; font-weight:600;">${tcs}</span></td>
+                    <td>${order.filledBy || "-"}</td>
+                `;
+            }
+            tr.onclick = () => selectRow(index, tr);
+            tbody.appendChild(tr);
+        });
+    }
+
+    function selectRow(index, rowEl) {
+        document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
+        rowEl.classList.add('selected');
+
+        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
+        selectedOrder = list[index];
+        document.getElementById('processingForm').style.display = 'block';
+
+        document.getElementById('dispMtcReq').textContent = selectedOrder.mtcRequirement || "-";
+        document.getElementById('dispPoInfo').textContent = `${selectedOrder.poNumber || "-"} (${selectedOrder.poDate || "-"})`;
+        document.getElementById('dispClient').textContent = selectedOrder.client;
+        document.getElementById('dispSalesDel').textContent = `${selectedOrder.salesPerson || "-"} / ${selectedOrder.deliveryDate || "-"}`;
+
+        const poDocContainer = document.getElementById('poDocContainer');
+        poDocContainer.innerHTML = '';
+        if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
+            poDocContainer.innerHTML = `<a href="${selectedOrder.poDocLink}" target="_blank" class="link-btn">📄 Attached PO / Ref Document</a>`;
+        } else {
+            poDocContainer.innerHTML = `<span class="no-doc">No PO Document attached</span>`;
+        }
+
+        const container = document.getElementById('itemsContainer');
+        
+        if (currentTab === 'pending') {
+            document.getElementById('formMainTitle').textContent = "Order Specifications & TC Upload";
+            document.getElementById('btnSave').style.display = 'block';
+            document.getElementById('btnWhatsApp').style.display = 'none';
+
+            let tableHtml = `
+                <div class="item-details-box">
+                    <div class="box-title">
+                        <span>ITEMIZED BREAKDOWN (HEATS & PLATES)</span>
+                        <span style="color: var(--primary);">${(selectedOrder.items || []).length} ITEM(S) PENDING</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Grade</th>
+                                <th>Make</th>
+                                <th>Size</th>
+                                <th>Qty</th>
+                                <th>Heat Number</th>
+                                <th>Plate Number</th>
+                                <th>TC Number</th>
+                                <th>Upload MTC Doc</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            (selectedOrder.items || []).forEach((item, i) => {
+                tableHtml += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td style="font-weight: 600;">${item.grade || "-"}</td>
+                        <td style="font-weight: 600; color: #4a5568;">${item.make || "-"}</td>
+                        <td>${item.size || "-"}</td>
+                        <td>${item.qty || "-"}</td>
+                        <td><span class="tag-heat">${item.heat || "-"}</span></td>
+                        <td><span class="tag-plate">${item.plate || "-"}</span></td>
+                        <td><input type="text" class="input-tc" id="tc_${i}" placeholder="TC No."></td>
+                        <td><input type="file" class="input-file" id="file_${i}" accept="application/pdf, image/*"></td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table></div></div>`;
+            container.innerHTML = tableHtml;
+
+        } else {
+            document.getElementById('formMainTitle').textContent = "Completed MTC Log Details";
+            document.getElementById('btnSave').style.display = 'none';
+            document.getElementById('btnWhatsApp').style.display = 'block';
+            
+            let tableHtml = `
+                <div class="item-details-box">
+                    <div class="box-title">
+                        <span>ASSIGNED TCS (COMPLETED LOG)</span>
+                        <span style="color: var(--primary);">${(selectedOrder.items || []).length} ITEM(S) LOGGED</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Grade</th>
+                                <th>Make</th>
+                                <th>Size</th>
+                                <th>Qty</th>
+                                <th>Heat Number</th>
+                                <th>Plate Number</th>
+                                <th>TC Number</th>
+                                <th>MTC Document</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            (selectedOrder.items || []).forEach((item, i) => {
+                let docLink = item.tcFile && item.tcFile.startsWith("http") ? `<a href="${item.tcFile}" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 600;">📄 View Document</a>` : "<span style='color:#a0aec0;'>No Document</span>";
+                tableHtml += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td style="font-weight: 600;">${item.grade || "-"}</td>
+                        <td style="font-weight: 600; color: #4a5568;">${item.make || "-"}</td>
+                        <td>${item.size || "-"}</td>
+                        <td>${item.qty || "-"}</td>
+                        <td><span class="tag-heat">${item.heat || "-"}</span></td>
+                        <td><span class="tag-plate">${item.plate || "-"}</span></td>
+                        <td><b style="color: #2b6cb0;">${item.tcNumber || "-"}</b></td>
+                        <td>${docLink}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table></div></div>`;
+            container.innerHTML = tableHtml;
+        }
+    }
+
+    function resetWorkspace() {
+        selectedOrder = null;
+        document.getElementById('processingForm').style.display = 'none';
+        document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
+    }
+
+    async function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve({ base64: reader.result.split(',')[1], name: file.name, type: file.type });
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function saveToSheet() {
+        if (!selectedOrder) return;
+        const filledBy = document.getElementById('formFilledBy').value.trim();
+        if (!filledBy) return alert("Please enter the MTC Person name.");
+
+        let processedItems = [];
+        const statusMsg = document.getElementById('statusMsg');
+        const btnSave = document.getElementById('btnSave');
+
+        for (let i = 0; i < selectedOrder.items.length; i++) {
+            let tcNum = document.getElementById(`tc_${i}`).value.trim();
+            if (tcNum) {
+                let fileInput = document.getElementById(`file_${i}`);
+                let fileData = null;
+                
+                if (fileInput.files.length > 0) {
+                    fileData = await getBase64(fileInput.files[0]);
+                }
+
+                processedItems.push({
+                    size: selectedOrder.items[i].size,
+                    grade: selectedOrder.items[i].grade,
+                    make: selectedOrder.items[i].make,
+                    qty: selectedOrder.items[i].qty,
+                    heat: selectedOrder.items[i].heat,
+                    plate: selectedOrder.items[i].plate,
+                    tcNumber: tcNum,
+                    tcFile: fileData
+                });
+            }
+        }
+
+        if (processedItems.length === 0) {
+            return alert("Please enter a TC Number for at least one item to process it.");
+        }
+
+        statusMsg.style.display = "block"; statusMsg.style.color = "#2b6cb0";
+        statusMsg.textContent = "Uploading MTC documents and saving logs... Please wait.";
+        btnSave.disabled = true;
+
+        try {
+            const orderRecord = {
+                poNumber: selectedOrder.poNumber,
+                client: selectedOrder.client,
+                poDate: selectedOrder.poDate,
+                salesPerson: selectedOrder.salesPerson,
+                deliveryDate: selectedOrder.deliveryDate,
+                mtcReq: selectedOrder.mtcRequirement
+            };
+
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ 
+                    orderRecord: orderRecord, 
+                    processedItems: processedItems, 
+                    filledBy: filledBy 
+                })
+            });
+
+            statusMsg.style.color = "#38a169"; statusMsg.textContent = "MTC Logs Saved Successfully!";
+            setTimeout(() => { location.reload(); }, 2000);
+
+        } catch (error) {
+            statusMsg.style.color = "#e53e3e"; statusMsg.textContent = error.message;
+            btnSave.disabled = false;
+        }
+    }
+
+   function shareWhatsApp() {
+        if (!selectedOrder) return;
+        let msg = `*📑 MTC Processing Completed*\n_${selectedOrder.timestamp}_\n\n`;
+        msg += `*PO Number:* ${selectedOrder.poNumber || "-"}\n`;
+        msg += `*Client Name:* ${selectedOrder.client}\n`;
+        
+        if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
+            msg += `*📄 PO Document:* ${selectedOrder.poDocLink}\n`;
+        }
+        
+        msg += `*MTC Person:* ${selectedOrder.filledBy}\n\n`;
+        
+        msg += `*📦 Items Logged (${(selectedOrder.items || []).length}):*\n`;
+        
+        (selectedOrder.items || []).forEach((it, idx) => {
+            msg += `\n*Item #${idx + 1}:*\n`;
+            msg += `• Grade/Make: ${it.grade || "-"} (${it.make || "-"})\n`;
+            msg += `• Size: ${it.size || "-"}\n`;
+            msg += `• Qty: ${it.qty || "-"}\n`;
+            msg += `• Heat: ${it.heat || "-"} | Plate: ${it.plate || "-"}\n`;
+            msg += `• TC No: *${it.tcNumber || "-"}*\n`;
+            
+            if (it.tcFile && it.tcFile.startsWith("http")) {
+                msg += `• 📄 TC Doc: ${it.tcFile}\n`;
+            }
+        });
+        
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+</script>
+</body>
+</html>

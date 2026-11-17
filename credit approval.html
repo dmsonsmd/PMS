@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Orders Verification</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); margin: 0; padding: 24px; color: var(--text-dark); }
+        .container { max-width: 1200px; margin: auto; }
+        
+        /* Header */
+        .header-bar {
+            background: var(--card-bg);
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-dark); }
+        .clock { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        
+        .tab-group { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 28px; }
+        .tab-btn {
+            border: none;
+            background: transparent;
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-weight: 700; }
+
+        /* Master Pending List Table */
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .table-scroll { max-height: 250px; overflow-y: auto; }
+        table.master-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        table.master-table th { background: #f8fafc; color: var(--text-muted); padding: 12px 14px; position: sticky; top: 0; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        table.master-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }
+        table.master-table tr:hover td { background-color: #f1f5f9; }
+        table.master-table tr.selected td { background-color: #e0f2fe; color: #0369a1; font-weight: 600; }
+
+        /* Workspace Review Card */
+        .review-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .section-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+
+        /* Metrics summary row */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+        .stat-box .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-box .stat-val { font-size: 15px; font-weight: 700; color: var(--text-dark); word-break: break-word; }
+        .stat-box.highlight { background: #eff6ff; border-color: #bfdbfe; }
+        .stat-box.highlight .stat-val { color: var(--primary); font-size: 18px; }
+
+        /* Detailed Line Items Table */
+        .item-details-box {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .box-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; display: flex; justify-content: space-between; }
+        table.items-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        table.items-table th { background: #f8fafc; color: #475569; padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+        table.items-table td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; color: var(--text-dark); }
+
+        /* Additional Meta Fields */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .meta-field {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .meta-field span:first-child { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .meta-field span:last-child { font-size: 13.5px; font-weight: 600; color: var(--text-dark); }
+
+        /* Approval Actions Box */
+        .actions-panel {
+            background: #fafafa;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 10px;
+        }
+        .type-selector { display: flex; gap: 24px; align-items: center; margin-bottom: 16px; }
+        .type-selector label { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+        .internal-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .input-group input { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+
+        .status-btn-group { display: flex; gap: 10px; }
+        .status-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .status-btn.active-hold { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .status-btn.active-go { background: var(--success); color: #fff; border-color: var(--success); }
+
+        /* Document Links */
+        .doc-link { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-weight: 600; font-size: 13px; text-decoration: none; padding: 6px 10px; background: #eff6ff; border-radius: 6px; }
+        .doc-link:hover { text-decoration: underline; }
+        .no-doc { color: #94a3b8; font-size: 13px; }
+
+        /* Save & Share Buttons */
+        .footer-buttons { display: flex; gap: 14px; margin-top: 20px; }
+        .btn-submit { flex: 1; padding: 13px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-sheet { background: var(--primary); color: #fff; }
+        .btn-sheet:hover { background: #1d4ed8; }
+        .btn-wa { background: #25d366; color: #fff; }
+        .btn-wa:hover { opacity: 0.9; }
+
+        #statusMsg { margin-top: 14px; text-align: center; font-weight: 700; font-size: 13px; display: none; }
+        .empty-placeholder { text-align: center; padding: 30px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Top Bar -->
+    <div class="header-bar">
+        <div>
+            <h2>Credit Orders Verification</h2>
+            <div class="clock" id="liveClock">Loading...</div>
+        </div>
+        <div class="tab-group">
+            <button class="tab-btn active" id="tabPending" onclick="switchTab('pending')">Pending (<span id="pendingCount">0</span>)</button>
+            <button class="tab-btn" id="tabCompleted" onclick="switchTab('completed')">Completed (<span id="completedCount">0</span>)</button>
+        </div>
+    </div>
+
+    <!-- Master Pending Table -->
+    <div class="table-card">
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Deliver Date</th>
+                        <th>PO Number</th>
+                        <th>Client Name</th>
+                        <th>Sales Person</th>
+                        <th>Credit Days</th>
+                        <th>Overall Order Value</th>
+                        <th>Items Count</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr><td colspan="7" class="empty-placeholder">Fetching records from sheet...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Structured Review & Action Panel -->
+    <div class="review-card">
+        <div class="section-header">
+            <h3>Order Verification & Action</h3>
+            <div id="docAttachmentArea"><span class="no-doc">No order selected</span></div>
+        </div>
+
+        <!-- 4 Key Metric Cards -->
+        <div class="stats-grid">
+            <div class="stat-box highlight">
+                <div class="stat-label">Overall Order Value</div>
+                <div class="stat-val" id="dispTotalVal">₹ 0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">PO Number & Date</div>
+                <div class="stat-val" id="dispPoInfo">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Client Name</div>
+                <div class="stat-val" id="dispClient">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Delivery Date / Terms</div>
+                <div class="stat-val" id="dispDeliveryInfo">-</div>
+            </div>
+        </div>
+
+        <!-- Clean Items Breakdown Table -->
+        <div class="item-details-box">
+            <div class="box-title">
+                <span>Itemized Breakdown</span>
+                <span id="dispItemCount" style="color: var(--primary);">0 Items</span>
+            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Confirm Sizes</th>
+                        <th>Pieces</th>
+                        <th>Quantity</th>
+                        <th>Grade / Make</th>
+                        <th>Confirm Price/Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                    <tr><td colspan="6" class="empty-placeholder" style="padding: 12px;">Select an order above to review item specifications.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Logistics & Inspection Tags -->
+        <div class="meta-grid">
+            <div class="meta-field">
+                <span>Transport Type & Charges</span>
+                <span id="dispTransport">-</span>
+            </div>
+            <div class="meta-field">
+                <span>Inspection / Testing</span>
+                <span id="dispInspection">-</span>
+            </div>
+            <div class="meta-field">
+                <span>Sales Person</span>
+                <span id="dispSales">-</span>
+            </div>
+        </div>
+
+        <!-- Actions Box -->
+        <div class="actions-panel">
+            <div class="type-selector">
+                <label><input type="radio" name="orderType" value="External" checked onchange="toggleType()"> External Verification</label>
+                <label><input type="radio" name="orderType" value="Internal" onchange="toggleType()"> Internal Credit</label>
+            </div>
+
+            <div id="internalControls" class="internal-controls" style="display: none;">
+                <div class="input-group">
+                    <label>Credit Limit (₹)</label>
+                    <input type="number" id="formCreditLimit" placeholder="Enter approved limit" oninput="checkLimit()">
+                </div>
+                <div class="input-group">
+                    <label>Dispatch Approval</label>
+                    <div class="status-btn-group">
+                        <button type="button" id="btnHold" class="status-btn" onclick="setStatus('HOLD')">HOLD</button>
+                        <button type="button" id="btnGO" class="status-btn" onclick="setStatus('GO')">GO</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-buttons">
+                <button class="btn-submit btn-sheet" id="btnSave" onclick="saveToSheet()">Save in Google Sheet</button>
+                <button class="btn-submit btn-wa" onclick="shareWhatsApp()">WhatsApp Share</button>
+            </div>
+            <div id="statusMsg"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ⚠️ PASTE YOUR ACTIVE CREDIT APPS SCRIPT DEPLOYMENT URL HERE
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzRd3PsRPTsLn5usn5BFwaMVOa0XZ2r2AkAYGQ6Be8M3l-zq3JC6ZgFfyYQ5qG_sf5dMg/exec";
+
+    let pendingOrders = [];
+    let completedOrders = [];
+    let currentTab = "pending";
+    let selectedOrder = null;
+    let selectedIndex = -1;
+    let currentStatus = "";
+
+    function updateClock() {
+        document.getElementById('liveClock').textContent = new Date().toLocaleString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    window.addEventListener('DOMContentLoaded', loadData);
+
+    function loadData() {
+        fetch(WEB_APP_URL)
+            .then(res => res.json())
+            .then(data => {
+                pendingOrders = (data.pending || []);
+                completedOrders = (data.completed || []);
+
+                document.getElementById('pendingCount').textContent = pendingOrders.length;
+                document.getElementById('completedCount').textContent = completedOrders.length;
+
+                renderTable();
+            })
+            .catch(err => {
+                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Failed to fetch orders.</td></tr>`;
+            });
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
+        document.getElementById('tabCompleted').classList.toggle('active', tab === 'completed');
+        resetWorkspace();
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('ordersTableBody');
+        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-placeholder">No ${currentTab} orders found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach((order, index) => {
+            const count = (order.itemList || []).length || 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${order.deliveryDate || "-"}</b></td>
+                <td><b>${order.poNumber || "-"}</b></td>
+                <td>${order.client}</td>
+                <td>${order.salesPerson}</td>
+                <td>${order.creditDays || "-"}</td>
+                <td><b>₹ ${order.overallTotal || order.totalOrderValue}</b></td>
+                <td><span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-weight:700;">${count}</span></td>
+            `;
+            tr.onclick = () => selectRow(index, tr);
+            tbody.appendChild(tr);
+        });
+    }
+
+    function selectRow(index, rowEl) {
+        document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
+        rowEl.classList.add('selected');
+
+        selectedIndex = index;
+        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
+        selectedOrder = list[index];
+
+        // Fill Metrics Cards
+        document.getElementById('dispTotalVal').textContent = "₹ " + (selectedOrder.overallTotal || selectedOrder.totalOrderValue || "0");
+        document.getElementById('dispPoInfo').textContent = `${selectedOrder.poNumber || "-"} (${selectedOrder.poDate || "-"})`;
+        document.getElementById('dispClient').textContent = selectedOrder.client;
+        document.getElementById('dispDeliveryInfo').textContent = `${selectedOrder.deliveryDate || "-"} (${selectedOrder.creditDays || "30"} Days)`;
+
+        document.getElementById('dispTransport').textContent = selectedOrder.transportType || "-";
+        document.getElementById('dispInspection').textContent = selectedOrder.inspectionType || "-";
+        document.getElementById('dispSales').textContent = selectedOrder.salesPerson || "-";
+
+        // Render Clean Itemized Table
+        const itemTbody = document.getElementById('itemsTableBody');
+        const rawItems = selectedOrder.itemList || [];
+
+        if (rawItems.length > 0) {
+            itemTbody.innerHTML = "";
+            document.getElementById('dispItemCount').textContent = `${rawItems.length} Item(s)`;
+
+            rawItems.forEach((str, i) => {
+                // Expected format: "10MM X 2500 X 6000 | Pcs: 1 | Qty: 1200 | SA516 GR70 (AMNS) @ Rate: 88000"
+                const parts = str.split('|');
+                const size = (parts[0] || "-").trim();
+                const pcs = (parts[1] || "-").replace('Pcs:', '').trim();
+                const qty = (parts[2] || "-").replace('Qty:', '').trim();
+                const gradeMake = (parts[3] || "-").split('@ Rate:')[0].trim();
+                const rate = (parts[3] || "").includes('@ Rate:') ? parts[3].split('@ Rate:')[1].trim() : "-";
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td><b>${size}</b></td>
+                    <td>${pcs}</td>
+                    <td>${qty}</td>
+                    <td>${gradeMake}</td>
+                    <td><b>${rate}</b></td>
+                `;
+                itemTbody.appendChild(tr);
+            });
+        } else {
+            // Fallback for single legacy orders
+            document.getElementById('dispItemCount').textContent = `1 Item`;
+            itemTbody.innerHTML = `
+                <tr>
+                    <td>1</td>
+                    <td>${selectedOrder.confirmSizes || "-"}</td>
+                    <td>${selectedOrder.pieces || "-"}</td>
+                    <td>${selectedOrder.quantity || "-"}</td>
+                    <td>${selectedOrder.grade || "-"} (${selectedOrder.make || "-"})</td>
+                    <td>${selectedOrder.confirmPriceRate || "-"}</td>
+                </tr>
+            `;
+        }
+
+        // Render Attached Document Link
+        const docArea = document.getElementById('docAttachmentArea');
+        if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
+            docArea.innerHTML = `<a href="${selectedOrder.poDocLink}" target="_blank" class="doc-link">📄 View Attached PO Document</a>`;
+        } else {
+            docArea.innerHTML = `<span class="no-doc">No Document Attached</span>`;
+        }
+
+        // Handle Completed vs Pending State
+        const btnSave = document.getElementById('btnSave');
+        if (currentTab === 'completed') {
+            btnSave.style.display = 'none';
+            const isInternal = (selectedOrder.type || "").toLowerCase() === "internal";
+            document.querySelector(`input[name="orderType"][value="${isInternal ? 'Internal' : 'External'}"]`).checked = true;
+            if (isInternal) {
+                document.getElementById('internalControls').style.display = 'grid';
+                document.getElementById('formCreditLimit').value = selectedOrder.creditLimit || '0';
+                setStatus((selectedOrder.status || "").toUpperCase());
+            } else {
+                document.getElementById('internalControls').style.display = 'none';
+            }
+        } else {
+            btnSave.style.display = 'block';
+            document.querySelector('input[name="orderType"][value="External"]').checked = true;
+            document.getElementById('internalControls').style.display = 'none';
+            document.getElementById('formCreditLimit').value = '';
+            clearStatusStyles();
+        }
+    }
+
+    function resetWorkspace() {
+        selectedOrder = null;
+        selectedIndex = -1;
+        document.getElementById('dispTotalVal').textContent = "₹ 0.00";
+        document.getElementById('dispPoInfo').textContent = "-";
+        document.getElementById('dispClient').textContent = "-";
+        document.getElementById('dispDeliveryInfo').textContent = "-";
+        document.getElementById('dispTransport').textContent = "-";
+        document.getElementById('dispInspection').textContent = "-";
+        document.getElementById('dispSales').textContent = "-";
+        document.getElementById('dispItemCount').textContent = "0 Items";
+        document.getElementById('docAttachmentArea').innerHTML = `<span class="no-doc">No order selected</span>`;
+        document.getElementById('itemsTableBody').innerHTML = `<tr><td colspan="6" class="empty-placeholder" style="padding: 12px;">Select an order above to review item specifications.</td></tr>`;
+        document.getElementById('internalControls').style.display = 'none';
+        clearStatusStyles();
+    }
+
+    function toggleType() {
+        const isInternal = document.querySelector('input[name="orderType"]:checked').value === "Internal";
+        document.getElementById('internalControls').style.display = isInternal ? 'grid' : 'none';
+        if (isInternal) checkLimit();
+    }
+
+    function checkLimit() {
+        const val = document.getElementById('formCreditLimit').value.trim();
+        if (val === "" || Number(val) === 0) setStatus('HOLD');
+    }
+
+    function setStatus(status) {
+        currentStatus = status;
+        clearStatusStyles();
+        if (status === 'HOLD') document.getElementById('btnHold').classList.add('active-hold');
+        if (status === 'GO') document.getElementById('btnGO').classList.add('active-go');
+    }
+
+    function clearStatusStyles() {
+        document.getElementById('btnHold').classList.remove('active-hold');
+        document.getElementById('btnGO').classList.remove('active-go');
+    }
+
+    function shareWhatsApp() {
+        if (!selectedOrder) return alert("Please select an order first.");
+
+        const type = document.querySelector('input[name="orderType"]:checked').value;
+        const limit = document.getElementById('formCreditLimit').value.trim();
+        const timestamp = new Date().toLocaleString();
+
+        let msg = `*Credit Approval Verification*\n_${timestamp}_\n\n`;
+        msg += `*PO Number:* ${selectedOrder.poNumber || "-"}\n`;
+        msg += `*Client Name:* ${selectedOrder.client}\n`;
+        msg += `*PO Date:* ${selectedOrder.poDate || "-"}\n`;
+        msg += `*DELIVER DATE:* ${selectedOrder.deliveryDate}\n`;
+        msg += `*Overall Order Value:* ₹ ${selectedOrder.overallTotal || selectedOrder.totalOrderValue}\n`;
+        msg += `*Credit Days:* ${selectedOrder.creditDays}\n\n`;
+
+        if (selectedOrder.itemList && selectedOrder.itemList.length > 0) {
+            msg += `*Itemized Specifications (${selectedOrder.itemList.length}):*\n`;
+            selectedOrder.itemList.forEach((item, idx) => {
+                msg += `${idx + 1}. ${item}\n`;
+            });
+            msg += `\n`;
+        }
+
+        msg += `*Type:* ${type}\n`;
+        if (type === 'Internal') {
+            msg += `*Credit Limit:* ₹ ${limit || "0"}\n`;
+            msg += `*Status:* ${currentStatus === 'HOLD' ? '⛔ HOLD' : (currentStatus === 'GO' ? '✅ GO' : 'Not Set')}\n`;
+        }
+
+        if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
+            msg += `\n*PO Document:* ${selectedOrder.poDocLink}\n`;
+        }
+
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    async function saveToSheet() {
+        if (!selectedOrder || selectedIndex === -1) {
+            return alert("Please select an order from the table first.");
+        }
+
+        const type = document.querySelector('input[name="orderType"]:checked').value;
+        const limit = type === 'Internal' ? (document.getElementById('formCreditLimit').value.trim() || "0") : "-";
+        const status = type === 'Internal' ? (currentStatus || "HOLD") : "-";
+        const timestamp = new Date().toLocaleString();
+        const statusMsg = document.getElementById('statusMsg');
+        const btnSave = document.getElementById('btnSave');
+
+        const rowData = [
+            timestamp,
+            selectedOrder.poNumber || "-",
+            selectedOrder.client,
+            selectedOrder.poDate || "-",
+            selectedOrder.salesPerson,
+            selectedOrder.creditDays || "-",
+            selectedOrder.deliveryDate || "-",
+            selectedOrder.overallTotal || selectedOrder.totalOrderValue || "-",
+            selectedOrder.transportType || "-",
+            selectedOrder.inspectionType || "-",
+            type,
+            limit,
+            status
+        ];
+
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "#475569";
+        statusMsg.textContent = "Saving to Google Sheet...";
+        btnSave.disabled = true;
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ creditRecord: rowData })
+            });
+
+            const resText = await response.text();
+            if (resText.includes("Error")) throw new Error(resText);
+
+            statusMsg.style.color = "#16a34a";
+            statusMsg.textContent = "Approved & Saved Successfully!";
+
+            const savedItem = { ...selectedOrder, type, creditLimit: limit, status, timestamp };
+            completedOrders.unshift(savedItem);
+            pendingOrders.splice(selectedIndex, 1);
+
+            document.getElementById('pendingCount').textContent = pendingOrders.length;
+            document.getElementById('completedCount').textContent = completedOrders.length;
+
+            resetWorkspace();
+            renderTable();
+
+            setTimeout(() => {
+                statusMsg.style.display = "none";
+                btnSave.disabled = false;
+            }, 3500);
+
+        } catch (err) {
+            statusMsg.style.color = "#dc2626";
+            statusMsg.textContent = "Failed to save: " + err.message;
+            btnSave.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

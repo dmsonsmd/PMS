@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspection & Testing Planning</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-light: #ebf8ff;
+            --success: #38a169;
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-dark: #1a202c;
+            --text-muted: #4a5568;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg); margin: 0; padding: 24px; color: var(--text-dark); }
+        .container { max-width: 1250px; margin: auto; }
+        
+        .header-box { background: var(--card-bg); padding: 18px 24px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .header-box h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-dark); }
+        .clock { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        
+        .controls-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .user-tag-box { display: flex; align-items: center; gap: 6px; background: #edf2f7; padding: 6px 12px; border-radius: 20px; border: 1px solid #cbd5e0; }
+        .user-tag-box label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .user-tag-box input { border: none; background: transparent; font-size: 13.5px; font-weight: 700; color: var(--primary); width: 140px; outline: none; }
+        
+        .tab-group { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 28px; }
+        .tab-btn { border: none; background: transparent; padding: 8px 16px; border-radius: 24px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-weight: 700; }
+
+        /* Master Table */
+        .table-card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .table-responsive { max-height: 300px; overflow-y: auto; }
+        table.master-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        table.master-table th { background: #f8fafc; color: var(--text-muted); padding: 12px 14px; position: sticky; top: 0; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 11.5px; letter-spacing: 0.5px; white-space: nowrap; }
+        table.master-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }
+        table.master-table tr:hover td { background-color: #f1f5f9; }
+        table.master-table tr.selected td { background-color: var(--primary-light); font-weight: 600; color: var(--primary); }
+
+        /* Review Card */
+        .review-card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+        .stat-box .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-box .stat-val { font-size: 14.5px; font-weight: 700; color: var(--text-dark); word-break: break-word; }
+        .stat-box.highlight { background: var(--primary-light); border-color: #bee3f8; }
+        .stat-box.highlight .stat-val { color: var(--primary); }
+
+        /* Item Breakdown Table */
+        .item-details-box { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .box-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        
+        table.items-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        table.items-table th { background: #f8fafc; color: #475569; padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; font-size: 12.5px; font-weight: 700; }
+        table.items-table td { padding: 12px 12px; border-bottom: 1px solid #f1f5f9; color: var(--text-dark); }
+        table.items-table td b { font-weight: 700; color: #1a202c; }
+
+        /* Forms */
+        .highlight-box { background: #f8fafc; border: 1px dashed #cbd5e0; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+        .grid-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .grid-row:last-child { margin-bottom: 0; }
+        
+        .field-group { display: flex; flex-direction: column; }
+        .field-group label { font-size: 11.5px; font-weight: 700; color: var(--primary); margin-bottom: 6px; text-transform: uppercase; }
+        .field-group input { padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; background: #fff; transition: all 0.2s; }
+        .field-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(43, 108, 176, 0.2); }
+
+        .link-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-weight: 600; font-size: 13px; text-decoration: none; padding: 8px 12px; background: var(--primary-light); border-radius: 6px; }
+        .link-btn:hover { text-decoration: underline; }
+        .no-doc { color: #a0aec0; font-size: 13px; }
+
+        .btn-container { display: flex; gap: 14px; }
+        .btn-action { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        .btn-sheet { background-color: var(--primary); color: #fff; }
+        .btn-whatsapp { background-color: #25D366; color: #fff; }
+        .btn-action:hover { opacity: 0.9; }
+
+        #statusMsg { text-align: center; font-size: 14px; font-weight: 700; margin-top: 14px; display: none; }
+        .empty-hint { text-align: center; color: var(--text-muted); padding: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <div>
+            <h2>Inspection & Testing Assignment</h2>
+            <div class="clock" id="liveClock">Loading...</div>
+        </div>
+        
+        <div class="controls-right">
+            <div class="user-tag-box">
+                <label for="filledByInput">Filled By:</label>
+                <input type="text" id="filledByInput" placeholder="Your Name" autocomplete="name">
+            </div>
+            <div class="tab-group">
+                <button type="button" class="tab-btn active" id="tabPending" onclick="switchTab('pending')">Pending (<span id="pendingCount">0</span>)</button>
+                <button type="button" class="tab-btn" id="tabCompleted" onclick="switchTab('completed')">Completed (<span id="completedCount">0</span>)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Pending Table -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Deliver Date</th>
+                        <th>PO Number</th>
+                        <th>Client Name</th>
+                        <th>Inspection Type</th>
+                        <th>Sales Person</th>
+                        <th>MTC Req</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr><td colspan="6" class="empty-hint">Loading inspection orders...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Review & Assignment Card -->
+    <div class="review-card">
+        <div class="section-title">
+            <span>Order Verification & Planning</span>
+            <div id="poDocContainer"><span class="no-doc">No order selected</span></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box highlight">
+                <div class="stat-label">PO Number & Date</div>
+                <div class="stat-val" id="dispPoInfo">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Client Name</div>
+                <div class="stat-val" id="dispClient">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Inspection Type</div>
+                <div class="stat-val" id="dispInspection">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Delivery Date</div>
+                <div class="stat-val" id="dispDelivery">-</div>
+            </div>
+        </div>
+
+        <!-- Clean Items Breakdown Table -->
+        <div class="item-details-box">
+            <div class="box-title">
+                <span>ITEMIZED BREAKDOWN</span>
+                <span id="dispItemCount" style="color: var(--primary);">0 ITEM</span>
+            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Confirm Sizes</th>
+                        <th>Pieces</th>
+                        <th>Quantity</th>
+                        <th>Grade / Make</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                    <tr><td colspan="5" class="empty-hint" style="padding: 16px;">Select an order above to review item specifications.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Logistics Meta -->
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-box">
+                <div class="stat-label">MTC Requirement</div>
+                <div class="stat-val" id="dispMtcReq">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Endorsement MTC</div>
+                <div class="stat-val" id="dispEndMtc">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Payment Terms</div>
+                <div class="stat-val" id="dispTerms">-</div>
+            </div>
+        </div>
+
+        <!-- Assignment Inputs -->
+        <div class="highlight-box">
+            <div class="grid-row">
+                <div class="field-group">
+                    <label>Planning Date *</label>
+                    <input type="date" id="formPlanningDate">
+                </div>
+                <div class="field-group">
+                    <label>Inspector / Agency Name *</label>
+                    <input type="text" id="formInspectorName" placeholder="Enter Inspector Name">
+                </div>
+            </div>
+            <div class="grid-row" style="margin-top: 16px;">
+                <div class="field-group">
+                    <label>Remark *</label>
+                    <input type="text" id="formRemark" placeholder="Enter remarks...">
+                </div>
+                <div class="field-group">
+                    <label>Upload ITP (File) <span style="font-weight: 400; color: #718096;">- Optional</span></label>
+                    <input type="file" id="formItpFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <small id="itpSavedLinkText" style="display:none; color:var(--primary); margin-top:6px; font-weight:700;"></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn-action btn-sheet" id="btnSave" onclick="saveToSheet()">Save Assignment to Sheet</button>
+            <button class="btn-action btn-whatsapp" id="btnWhatsApp" onclick="shareWhatsApp()">WhatsApp Share</button>
+        </div>
+
+        <div id="statusMsg"></div>
+    </div>
+</div>
+
+<script>
+    // ⚠️ PASTE YOUR ACTIVE INSPECTION APPS SCRIPT DEPLOYMENT URL HERE
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzIebqHa4gNolDebzfUH7jSwK-uU-PZVNXaBhJMateZS2rz5OdmCZZu83huOLtMbN2B/exec";		
+
+    let pendingList = [];
+    let completedList = [];
+    let currentTab = "pending";
+    let selectedOrder = null;
+    let selectedIndex = -1;
+    let activeDriveLink = "";
+
+    function updateClock() { document.getElementById('liveClock').textContent = new Date().toLocaleString(); }
+    setInterval(updateClock, 1000); updateClock();
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedName = localStorage.getItem("inspection_filled_by");
+        if (savedName) document.getElementById('filledByInput').value = savedName;
+        loadData();
+    });
+
+    document.getElementById('filledByInput').addEventListener('input', (e) => {
+        localStorage.setItem("inspection_filled_by", e.target.value.trim());
+    });
+
+    function loadData() {
+        fetch(WEB_APP_URL)
+            .then(res => res.json())
+            .then(data => {
+                pendingList = data.pending || [];
+                completedList = data.completed || [];
+                document.getElementById('pendingCount').textContent = pendingList.length;
+                document.getElementById('completedCount').textContent = completedList.length;
+                renderTable();
+            })
+            .catch(err => {
+                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Failed to load data.</td></tr>`;
+            });
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
+        document.getElementById('tabCompleted').classList.toggle('active', tab === 'completed');
+        resetWorkspace();
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('ordersTableBody');
+        const list = currentTab === 'pending' ? pendingList : completedList;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-hint">No ${currentTab} orders found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach((order, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${order.deliveryDate || "-"}</b></td>
+                <td><b>${order.poNumber || "-"}</b></td>
+                <td>${order.client}</td>
+                <td><span style="background:var(--primary-light); color:var(--primary); padding:3px 8px; border-radius:4px; font-weight:700;">${order.inspectionType}</span></td>
+                <td>${order.salesPerson}</td>
+                <td>${order.mtcRequirement || "-"}</td>
+            `;
+            tr.onclick = () => selectRow(index, tr);
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Smart Unpacker for Legacy Clamped Data
+    function expandLegacyItems(itemList) {
+        if (!itemList || itemList.length === 0) return [];
+        let expanded = [];
+        itemList.forEach(it => {
+            let sizeStr = it.size || "-";
+            if (sizeStr.includes('|') || sizeStr.includes('\n') || (it.qty && it.qty.includes(',')) || (it.pcs && it.pcs.includes(','))) {
+                
+                let sizesArr = sizeStr.split(/\||\n/).map(s => s.replace('•', '').trim()).filter(Boolean);
+                let pcsArr = (it.pcs || "").split(/\||,|\n/).map(s => s.trim()).filter(Boolean);
+                let qtyArr = (it.qty || "").split(/\||,|\n/).map(s => s.trim()).filter(Boolean);
+                let gradeArr = (it.grade || "").split(/\||\n/).map(s => s.trim()).filter(Boolean);
+                let makeArr = (it.make || "").split(/\||\n/).map(s => s.trim()).filter(Boolean);
+
+                let maxLen = Math.max(sizesArr.length, pcsArr.length, qtyArr.length);
+                if (maxLen === 0) maxLen = 1;
+
+                for (let i = 0; i < maxLen; i++) {
+                    expanded.push({
+                        size: sizesArr[i] || sizesArr[0] || "-",
+                        pcs: pcsArr[i] || (pcsArr.length === 1 ? pcsArr[0] : "-"),
+                        qty: qtyArr[i] || (qtyArr.length === 1 ? qtyArr[0] : "-"),
+                        grade: gradeArr[i] || (gradeArr.length === 1 ? gradeArr[0] : "-"),
+                        make: makeArr[i] || (makeArr.length === 1 ? makeArr[0] : "-")
+                    });
+                }
+            } else {
+                expanded.push(it);
+            }
+        });
+        return expanded;
+    }
+
+    function selectRow(index, rowEl) {
+        document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
+        rowEl.classList.add('selected');
+
+        selectedIndex = index;
+        const list = currentTab === 'pending' ? pendingList : completedList;
+        selectedOrder = list[index];
+
+        document.getElementById('dispPoInfo').textContent = `${selectedOrder.poNumber || "-"} (${selectedOrder.poDate || "-"})`;
+        document.getElementById('dispClient').textContent = selectedOrder.client;
+        document.getElementById('dispInspection').textContent = selectedOrder.inspectionType || "-";
+        document.getElementById('dispDelivery').textContent = selectedOrder.deliveryDate || "-";
+        
+        document.getElementById('dispMtcReq').textContent = selectedOrder.mtcRequirement || "-";
+        document.getElementById('dispEndMtc').textContent = selectedOrder.endorsementMtc || "-";
+        document.getElementById('dispTerms').textContent = selectedOrder.paymentTerms || "-";
+
+        const itemTbody = document.getElementById('itemsTableBody');
+        
+        // Unpack into expanded items for clean display
+        selectedOrder.expandedItems = expandLegacyItems(selectedOrder.itemList);
+        const renderItems = selectedOrder.expandedItems;
+
+        if (renderItems.length > 0) {
+            itemTbody.innerHTML = "";
+            document.getElementById('dispItemCount').textContent = `${renderItems.length} ITEM${renderItems.length > 1 ? 'S' : ''}`;
+            renderItems.forEach((it, i) => {
+                let combinedGradeMake = it.grade || "-";
+                if (it.make && it.make !== "-") {
+                    combinedGradeMake += ` (${it.make})`;
+                }
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td><b>${it.size || "-"}</b></td>
+                    <td>${it.pcs || "-"}</td>
+                    <td>${it.qty || "-"}</td>
+                    <td>${combinedGradeMake}</td>
+                `;
+                itemTbody.appendChild(tr);
+            });
+        } else {
+            document.getElementById('dispItemCount').textContent = `1 ITEM`;
+            let combinedGradeMake = selectedOrder.grade || "-";
+            if (selectedOrder.make && selectedOrder.make !== "-") {
+                combinedGradeMake += ` (${selectedOrder.make})`;
+            }
+            itemTbody.innerHTML = `
+                <tr>
+                    <td>1</td>
+                    <td><b>${selectedOrder.confirmSizes || "-"}</b></td>
+                    <td>${selectedOrder.pieces || "-"}</td>
+                    <td>${selectedOrder.quantity || "-"}</td>
+                    <td>${combinedGradeMake}</td>
+                </tr>
+            `;
+        }
+
+        const poDocContainer = document.getElementById('poDocContainer');
+        const poLink = selectedOrder.poDocLink || "";
+        if (poLink.startsWith("http")) {
+            poDocContainer.innerHTML = `<a href="${poLink}" target="_blank" class="link-btn">📄 View Attached PO Document</a>`;
+        } else {
+            poDocContainer.innerHTML = `<span class="no-doc">No PO Document Attached</span>`;
+        }
+
+        activeDriveLink = selectedOrder.itpFileLink && selectedOrder.itpFileLink.startsWith("http") ? selectedOrder.itpFileLink : "";
+        const linkEl = document.getElementById('itpSavedLinkText');
+        if (activeDriveLink) {
+            linkEl.style.display = "block";
+            linkEl.innerHTML = `Saved Link: <a href="${activeDriveLink}" target="_blank">View Uploaded ITP</a>`;
+        } else {
+            linkEl.style.display = "none";
+        }
+
+        if (currentTab === 'completed') {
+            document.getElementById('formPlanningDate').value = selectedOrder.planningDate || '';
+            document.getElementById('formInspectorName').value = selectedOrder.inspectorName || '';
+            document.getElementById('formRemark').value = selectedOrder.remark || '';
+            if (selectedOrder.filledBy && selectedOrder.filledBy !== "-") {
+                document.getElementById('filledByInput').value = selectedOrder.filledBy;
+            }
+            document.getElementById('btnSave').style.display = "none";
+        } else {
+            document.getElementById('formPlanningDate').value = '';
+            document.getElementById('formInspectorName').value = '';
+            document.getElementById('formRemark').value = '';
+            document.getElementById('formItpFile').value = '';
+            document.getElementById('btnSave').style.display = "block";
+        }
+    }
+
+    function resetWorkspace() {
+        selectedOrder = null;
+        selectedIndex = -1;
+        activeDriveLink = "";
+        
+        document.getElementById('dispPoInfo').textContent = "-";
+        document.getElementById('dispClient').textContent = "-";
+        document.getElementById('dispInspection').textContent = "-";
+        document.getElementById('dispDelivery').textContent = "-";
+        document.getElementById('dispMtcReq').textContent = "-";
+        document.getElementById('dispEndMtc').textContent = "-";
+        document.getElementById('dispTerms').textContent = "-";
+        
+        document.getElementById('dispItemCount').textContent = "0 ITEM";
+        document.getElementById('itemsTableBody').innerHTML = `<tr><td colspan="5" class="empty-hint" style="padding: 16px;">Select an order above to review item specifications.</td></tr>`;
+        document.getElementById('poDocContainer').innerHTML = `<span class="no-doc">No order selected</span>`;
+        
+        document.getElementById('formPlanningDate').value = '';
+        document.getElementById('formInspectorName').value = '';
+        document.getElementById('formRemark').value = '';
+        document.getElementById('formItpFile').value = '';
+        document.getElementById('itpSavedLinkText').style.display = 'none';
+        
+        document.getElementById('btnSave').style.display = "block";
+        document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
+    }
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve({ base64: reader.result.split(',')[1], name: file.name, type: file.type });
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function saveToSheet() {
+        if (!selectedOrder || selectedIndex === -1) {
+            return alert("Please select an order from the table first.");
+        }
+
+        const filledBy = document.getElementById('filledByInput').value.trim();
+        const planningDate = document.getElementById('formPlanningDate').value;
+        const inspectorName = document.getElementById('formInspectorName').value.trim();
+        const remark = document.getElementById('formRemark').value.trim();
+        const fileInput = document.getElementById('formItpFile');
+
+        if (!filledBy) return alert("Please enter your name in the 'Filled By' field at the top.");
+        if (!planningDate) return alert("Please select a Planning Date.");
+        if (!inspectorName) return alert("Please enter the Inspector Name.");
+        if (!remark) return alert("Please enter a Remark.");
+
+        const timestamp = new Date().toLocaleString();
+        const statusMsg = document.getElementById('statusMsg');
+
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "#4a5568";
+        statusMsg.textContent = "Uploading to Drive & Saving to Sheet...";
+
+        let itpFileData = null;
+        if (fileInput.files.length > 0) {
+            try { itpFileData = await getBase64(fileInput.files[0]); } catch (err) {}
+        }
+
+        // PERFECTLY MAPPED ARRAY to match Inspection Sheet headers!
+        const rowData = [
+            timestamp,                           // 1. Timestamp
+            selectedOrder.poNumber || "-",       // 2. PO Number (Fixed Placement!)
+            selectedOrder.client,                // 3. Client Name
+            selectedOrder.poDate || "-",         // 4. PO Date
+            selectedOrder.salesPerson,           // 5. Sales Person
+            selectedOrder.deliveryDate,          // 6. DELIVER DATE
+            selectedOrder.inspectionType,        // 7. Inspection / Testing
+            "-", // 8. legacy make
+            "-", // 9. legacy grade
+            "-", // 10. legacy sizes
+            "-", // 11. legacy pieces
+            "-", // 12. legacy quantity
+            selectedOrder.paymentTerms || "-",   // 13. Payment terms
+            selectedOrder.mtcRequirement || "-", // 14. MTC Requirement
+            selectedOrder.endorsementMtc || "-", // 15. Endorsement MTC
+            planningDate,                        // 16. Planning Date
+            inspectorName,                       // 17. Inspector Name
+            remark,                              // 18. Remark
+            selectedOrder.poDocLink || "-"       // 19. PO / Ref Document
+        ]; // The backend script automatically appends the ITP Link & Filled By
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    inspectionRecord: rowData,
+                    itpFile: itpFileData,
+                    filledBy: filledBy
+                })
+            });
+
+            const returnedText = await response.text();
+            if (returnedText && returnedText.startsWith("http")) {
+                activeDriveLink = returnedText.trim();
+                const linkEl = document.getElementById('itpSavedLinkText');
+                linkEl.style.display = "block";
+                linkEl.innerHTML = `Uploaded Link: <a href="${activeDriveLink}" target="_blank">View Uploaded ITP</a>`;
+            }
+
+            statusMsg.style.color = "#38a169";
+            statusMsg.textContent = "Saved successfully! You can now share on WhatsApp.";
+
+            const savedItem = { 
+                ...selectedOrder, timestamp, planningDate, inspectorName, remark, 
+                itpFileLink: activeDriveLink || "None", filledBy: filledBy
+            };
+            completedList.unshift(savedItem);
+            pendingList.splice(selectedIndex, 1);
+
+            document.getElementById('pendingCount').textContent = pendingList.length;
+            document.getElementById('completedCount').textContent = completedList.length;
+
+            renderTable();
+            setTimeout(() => { statusMsg.style.display = "none"; }, 4000);
+        } catch (err) {
+            statusMsg.style.color = "#e53e3e";
+            statusMsg.textContent = "Failed to save.";
+        }
+    }
+
+    function shareWhatsApp() {
+        if (!selectedOrder) return alert("Please select an order from the table first.");
+
+        const filledBy = document.getElementById('filledByInput').value.trim();
+        const planningDate = document.getElementById('formPlanningDate').value;
+        const inspectorName = document.getElementById('formInspectorName').value.trim();
+        const remark = document.getElementById('formRemark').value.trim();
+        const fileInput = document.getElementById('formItpFile');
+
+        if (!planningDate || !inspectorName || !remark) {
+            return alert("Please enter Planning Date, Inspector Name, and Remark before sharing.");
+        }
+
+        if (!activeDriveLink && fileInput.files.length > 0) {
+            return alert("Please click 'Save Assignment to Sheet' first to generate the ITP link.");
+        }
+
+        let msg = `*🔍 Inspection / Testing Assignment*\n_${new Date().toLocaleString()}_\n\n`;
+        if (filledBy) msg += `*✍️ Assigned By:* ${filledBy}\n`;
+        msg += `*PO Number:* ${selectedOrder.poNumber || "-"}\n`;
+        msg += `*Client Name:* ${selectedOrder.client}\n`;
+        msg += `*PO Date:* ${selectedOrder.poDate || "-"}\n`;
+        msg += `*Sales Person:* ${selectedOrder.salesPerson}\n`;
+        msg += `*Delivery Date:* ${selectedOrder.deliveryDate}\n`;
+        msg += `*Requirement:* ${selectedOrder.inspectionType}\n\n`;
+        
+        const unpackedItems = selectedOrder.expandedItems || [];
+        if (unpackedItems.length > 0) {
+            msg += `*📦 Item Specifications (${unpackedItems.length}):*\n`;
+            unpackedItems.forEach((it, idx) => {
+                let combinedGradeMake = it.grade || "-";
+                if (it.make && it.make !== "-") {
+                    combinedGradeMake += ` (${it.make})`;
+                }
+                msg += `\n*Item #${idx + 1}:*\n`;
+                if (it.size) msg += `• Size: ${it.size}\n`;
+                if (it.pcs) msg += `• Pieces: ${it.pcs}\n`;
+                if (it.qty) msg += `• Quantity: ${it.qty}\n`;
+                if (combinedGradeMake !== "-") msg += `• Grade / Make: ${combinedGradeMake}\n`;
+            });
+            msg += `\n`;
+        }
+
+        msg += `*Payment Terms:* ${selectedOrder.paymentTerms || "-"}\n`;
+        msg += `*MTC Requirement:* ${selectedOrder.mtcRequirement || "-"}\n`;
+        msg += `*Endorsement MTC:* ${selectedOrder.endorsementMtc || "-"}\n\n`;
+        msg += `*📅 Planning Date:* ${planningDate}\n`;
+        msg += `*👤 Inspector Name:* ${inspectorName}\n`;
+        msg += `*📝 Remark:* ${remark}\n`;
+
+        if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
+            msg += `\n*📄 PO / Ref Document:*\n${selectedOrder.poDocLink}\n`;
+        }
+
+        if (activeDriveLink && activeDriveLink.startsWith("http")) {
+            msg += `\n*📎 ITP Document Link:*\n${activeDriveLink}\n`;
+        } else {
+            msg += `\n*📎 ITP File:* None\n`;
+        }
+
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+</script>
+</body>
+</html>

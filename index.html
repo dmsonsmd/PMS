@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM SONS - PMS Pipeline</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: #0f172a; margin: 0; }
+        .menu-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 450px; border: 1px solid #e2e8f0; }
+        h2 { text-align: center; margin-top: 0; font-size: 22px; font-weight: 800; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;}
+        
+        .pipeline-flow { display: flex; flex-direction: column; gap: 10px; position: relative; }
+        
+        .menu-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 18px; background: #ffffff; color: #334155; text-decoration: none; font-weight: 700; font-size: 14.5px; border-radius: 8px; border: 1px solid #cbd5e1; transition: all 0.2s; box-sizing: border-box; }
+        .menu-btn:hover { background: #f8fafc; border-color: #94a3b8; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .icon { font-size: 18px; }
+        
+        /* Highlight specific buttons */
+        .btn-entry { border-left: 4px solid #3b82f6; }
+        .btn-credit { border-left: 4px solid #8b5cf6; }
+        .btn-insp { border-left: 4px solid #eab308; }
+        .btn-godown { border-left: 4px solid #f97316; }
+        .btn-mtc { border-left: 4px solid #06b6d4; }
+        .btn-signoff { border-left: 4px solid #14b8a6; }
+        .btn-dispatch { border-left: 4px solid #22c55e; }
+        .btn-dash { background: #0f172a; color: white; border: none; margin-top: 15px; justify-content: center; }
+        .btn-dash:hover { background: #1e293b; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <h2>DM SONS METAL<br><span style="font-size: 14px; color: #64748b; font-weight: 600;">Production Management System</span></h2>
+        
+        <div class="pipeline-flow">
+            <a href="order%20entry.html" class="menu-btn btn-entry"><span class="icon">📝</span> 1. Order Entry</a>
+            
+            <a href="credit%20approval_3.html" class="menu-btn btn-credit"><span class="icon">💳</span> 2. Credit Approval</a>
+            
+            <a href="INSPECTION.HTML" class="menu-btn btn-insp"><span class="icon">🔍</span> 3. Inspection Planning</a>
+            
+            <a href="GODWON_3.html" class="menu-btn btn-godown"><span class="icon">🏭</span> 4. Godown Processing</a>
+            
+            <a href="MTC_3.html" class="menu-btn btn-mtc"><span class="icon">📄</span> 5. MTC Upload</a>
+            
+            <a href="GODWON-Report_3.html" class="menu-btn btn-signoff"><span class="icon">✍️</span> 6. Final Sign-Off</a>
+            
+            <a href="DIspatch.html" class="menu-btn btn-dispatch"><span class="icon">🚚</span> 7. Material Dispatch</a>
+            
+            <a href="DASHBORD_3.html" class="menu-btn btn-dash"><span class="icon">📊</span> View Master Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

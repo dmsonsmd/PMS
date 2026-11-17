@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Processing Checklist</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 20px; max-width: 950px; margin: auto; background-color: #f8fafc; color: #1e293b; }
+        
+        /* Top Utility Bar (Search past PO) */
+        .lookup-bar { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .lookup-bar input { flex: 1; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; }
+        .lookup-bar button { padding: 9px 16px; background: #0f172a; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .lookup-bar button:hover { background: #334155; }
+
+        .header-section { margin-bottom: 20px; padding: 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .timestamp-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .timestamp { font-weight: bold; color: #64748b; font-size: 13px; }
+        .po-counter-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #bae6fd; }
+        .top-inputs-container { display: flex; gap: 10px; margin-bottom: 10px; }
+        .top-input { padding: 10px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        .upload-container { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; margin-top: 10px; }
+        .upload-container label { font-weight: bold; font-size: 13px; color: #475569; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; vertical-align: middle; }
+        th { background-color: #f1f5f9; text-align: center; font-weight: 700; font-size: 12.5px; color: #475569; text-transform: uppercase; }
+        .col-sr { width: 5%; text-align: center; font-weight: bold; }
+        .col-checklist { width: 38%; font-weight: 600; font-size: 13.5px; }
+        .col-input { width: 47%; }
+        .col-yn { width: 10%; text-align: center; }
+        .task-input { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; font-family: inherit; border-radius: 4px; box-sizing: border-box; font-size: 13.5px; }
+        .task-input:focus { outline: none; border-color: #2563eb; }
+        
+        .button-container { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 180px; padding: 12px; color: white; font-size: 14.5px; font-weight: 700; border: none; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+        .save-btn { background-color: #2563eb; }
+        .save-btn:hover { background-color: #1d4ed8; }
+        .wa-btn { background-color: #25D366; }
+        .wa-btn:hover { background-color: #1ebe5d; }
+        .reset-btn { background-color: #64748b; flex: 0.5; min-width: 120px; }
+        .reset-btn:hover { background-color: #475569; }
+
+        .queue-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-top: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: none; }
+        .queue-title { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; text-transform: uppercase; }
+        .queue-item { font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9; color: #475569; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <h2 style="margin-bottom: 14px;">Order Processing Checklist (Item Entry)</h2>
+
+    <!-- SEARCH & RE-SHARE SAVED PO BAR -->
+    <div class="lookup-bar">
+        <span style="font-weight: 700; font-size: 13px; color: #475569;">🔍 Load Saved PO:</span>
+        <input type="text" id="searchPoInput" placeholder="Enter past PO Number (e.g. LOI)">
+        <button type="button" onclick="loadSavedPO()">Fetch & Load</button>
+    </div>
+    
+    <div class="header-section">
+        <div class="timestamp-bar">
+            <div class="timestamp" id="datetimeDisplay">Date & Time: Loading...</div>
+            <div class="po-counter-badge" id="poItemBadge">Items saved for this PO: 0</div>
+        </div>
+        
+        <div class="top-inputs-container">
+            <input type="text" id="poNumberInput" class="top-input" style="flex: 1;" placeholder="PO Number (e.g. LOI)">
+            <input type="text" id="clientNameInput" class="top-input" style="flex: 1.5;" placeholder="Client Name">
+            <input type="text" id="salesPersonInput" class="top-input" style="flex: 1;" placeholder="Sales Person Name">
+        </div>
+        <div class="top-inputs-container" style="align-items: center;">
+            <label style="font-weight: bold; font-size: 13.5px; color: #475569; width: 80px;">PO Date:</label>
+            <input type="date" id="poDateInput" class="top-input" style="flex: 1;">
+        </div>
+        <div class="upload-container">
+            <label>Upload PO / Reference Document:</label>
+            <input type="file" id="fileUpload" class="top-input" accept="image/*, application/pdf" style="flex: 1; border: none; padding: 2px;">
+        </div>
+    </div>
+
+    <table id="checklistTable">
+        <thead>
+            <tr><th class="col-sr">Sr. no</th><th class="col-checklist">Checklist Item</th><th class="col-input">Details / Input</th><th class="col-yn">Y / N</th></tr>
+        </thead>
+        <tbody>
+            <tr data-field-key="confirmSizes"><td class="col-sr">1</td><td>Confirm sizes</td><td><input type="text" class="task-input" id="inputSizes" placeholder="e.g. 10MM X 2500 X 6000"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="pieces"><td class="col-sr">2</td><td>Pieces</td><td><input type="text" class="task-input" id="inputPieces" placeholder="e.g. 1"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="quantity"><td class="col-sr">3</td><td>Quantity</td><td><input type="text" class="task-input" id="inputQuantity" placeholder="e.g. 1200 MT/KG"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="grade"><td class="col-sr">4</td><td>Grade</td><td><input type="text" class="task-input" id="inputGrade" placeholder="e.g. SA516 GR70"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="make"><td class="col-sr">5</td><td>Make</td><td><input type="text" class="task-input" id="inputMake" placeholder="e.g. AMNS / SAIL"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="priceRate"><td class="col-sr">6</td><td>Confirm Price / Rate</td><td><input type="text" class="task-input" id="inputPriceRate" placeholder="e.g. 88000"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="paymentTerms">
+                <td class="col-sr">7</td><td>Payment terms</td>
+                <td>
+                    <select class="task-input" id="paymentTerms" onchange="checkPaymentTerms()">
+                        <option value="">Select Terms...</option>
+                        <option value="Advance">Advance</option>
+                        <option value="Credit">Credit</option>
+                        <option value="LC">LC</option>
+                    </select>	
+                </td>
+                <td class="col-yn"><input type="checkbox"></td>
+            </tr>
+            <tr data-field-key="creditDays"><td class="col-sr">8</td><td>Credit DAYS</td><td><input type="text" class="task-input" id="creditDaysInput" placeholder="e.g. 30 DAYS"></td><td class="col-yn"><input type="checkbox" id="creditDaysCheckbox"></td></tr>
+            
+            <!-- TOTAL PO VALUE -->
+            <tr data-field-key="totalOrderValue">
+                <td class="col-sr">9</td>
+                <td>TOTAL ORDER VALUE (PO Total)</td>
+                <td><input type="text" class="task-input" id="inputTotalValue" placeholder="Overall Total (e.g. 896080)"></td>
+                <td class="col-yn"><input type="checkbox"></td>
+            </tr>
+
+            <!-- ITEM VALUE -->
+            <tr data-field-key="itemValue">
+                <td class="col-sr">10</td>
+                <td>ITEM VALUE (Current Item)</td>
+                <td><input type="text" class="task-input" id="inputItemValue" placeholder="This Item's Value (e.g. 105600)"></td>
+                <td class="col-yn"><input type="checkbox"></td>
+            </tr>
+
+            <tr data-field-key="deliveryDate"><td class="col-sr">11</td><td>DELIVER DATE</td><td><input type="date" id="inputDeliveryDate" class="task-input" style="height: 35px;"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="materialAvailability">
+                <td class="col-sr">12</td><td>Material availability</td>
+                <td>
+                    <select class="task-input" id="materialAvailability" onchange="checkMaterialAvailability()">
+                        <option value="">Select...</option>
+                        <option value="GODOWN">GODOWN</option>
+                        <option value="CUTTER">CUTTER</option>
+                        <option value="OUTSIDE">OUTSIDE</option>
+                        <option value="NOT AVAILABLE">NOT AVAILABLE</option>
+                    </select>
+                    <input type="text" id="outsideLocation" class="task-input" placeholder="Enter Location" value="None" style="display: none; margin-top: 6px;">
+                </td>
+                <td class="col-yn"><input type="checkbox"></td>
+            </tr>
+            <tr data-field-key="transport"><td class="col-sr">13</td><td>Transport type & charges including</td><td><select class="task-input"><option value="">Select...</option><option value="Party side">Party side</option><option value="Our side">Our side</option></select></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="inspection">
+                <td class="col-sr">14</td><td>Inspection / Testing</td>
+                <td>
+                    <select class="task-input" id="inspectionSelect">
+                        <option value="">Select...</option>
+                        <option value="INSPECTION">INSPECTION</option>
+                        <option value="TESTING">TESTING</option>
+                        <option value="INSPECTION&TESTING">INSPECTION&TESTING</option>
+                    </select>
+                </td>
+                <td class="col-yn"><input type="checkbox"></td>
+            </tr>
+            <tr data-field-key="mtcReq"><td class="col-sr">15</td><td>MTC Requirement</td><td><select class="task-input"><option value="">Select...</option><option value="BOTH">BOTH</option><option value="IBR Form IV">IBR Form IV</option><option value="Original MTC">Original MTC</option></select></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="mtcEndorsement"><td class="col-sr">16</td><td>Endorsement MTC</td><td><input type="text" class="task-input" id="inputEndorsement"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr data-field-key="specialInstruction"><td class="col-sr">17</td><td>Special Instruction</td><td><input type="text" class="task-input" id="inputSpecial"></td><td class="col-yn"><input type="checkbox"></td></tr>
+        </tbody>
+    </table>
+
+    <!-- Live Items Summary Queue -->
+    <div class="queue-card" id="poQueueCard">
+        <div class="queue-title">📋 Items in this PO (<span id="queueCount">0</span>)</div>
+        <div id="queueList"></div>
+    </div>
+
+    <div class="button-container">
+        <button id="btnSave" class="btn save-btn" onclick="saveToSheets()">💾 Save Item to Sheet</button>
+        <button id="btnWa" class="btn wa-btn" onclick="shareEntirePOonWhatsApp()">📲 Share Combined PO on WhatsApp</button>
+        <button id="btnReset" class="btn reset-btn" onclick="startNewPO()">🔄 New PO</button>
+    </div>
+    <p id="statusMsg" style="display: none; text-align: center; font-weight: bold; margin-top: 15px;"></p>
+
+    <script>
+        // ⚠️ PASTE YOUR MASTER ORDER ENTRY WEB APP URL HERE:
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbz9fnnqNrNn_4NvSeVgU-cnereyFzXgo_G7sNOMAWGxbP9wylwa-IpQI2whI6V0btV69A/exec";
+        
+        let savedDriveLink = ""; 
+        let poItemsList = []; 
+
+        function formatToDDMMYYYY(val) {
+            if (!val || val.indexOf('-') === -1) return val || "-";
+            const parts = val.split('-');
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        function updateDateTime() {
+            var el = document.getElementById('datetimeDisplay');
+            if (el) el.textContent = "Date & Time: " + new Date().toLocaleString();
+        }
+        updateDateTime(); setInterval(updateDateTime, 1000);
+
+        async function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve({ name: file.name, type: file.type, base64: reader.result.split(',')[1] });
+                reader.onerror = reject; reader.readAsDataURL(file);
+            });
+        }
+
+        // 🔍 LOAD ALREADY SAVED PO FROM SHEET
+        async function loadSavedPO() {
+            const query = document.getElementById('searchPoInput').value.trim();
+            if (!query) return alert("Please enter a PO Number to search.");
+
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.style.display = "block";
+            statusMsg.style.color = "#2563eb";
+            statusMsg.textContent = `Searching Google Sheet for PO "${query}"...`;
+
+            try {
+                const response = await fetch(`${GOOGLE_APP_URL}?searchPo=${encodeURIComponent(query)}`);
+                const result = await response.json();
+
+                if (!result.found || !result.rows || result.rows.length === 0) {
+                    statusMsg.style.color = "#dc2626";
+                    statusMsg.textContent = `No saved records found for PO: "${query}".`;
+                    return;
+                }
+
+                const headers = result.headers.map(h => (h || "").toString().toLowerCase().trim());
+                const rows = result.rows;
+
+                // Map Indexes
+                const poNumCol   = headers.indexOf("po number");
+                const clientCol  = headers.indexOf("client name");
+                const poDateCol  = headers.indexOf("po date");
+                const salesCol   = headers.indexOf("sales person");
+                const sizesCol   = headers.indexOf("confirm sizes");
+                const pcsCol     = headers.indexOf("pieces");
+                const qtyCol     = headers.indexOf("quantity");
+                const gradeCol   = headers.indexOf("grade");
+                const makeCol    = headers.indexOf("make");
+                const rateCol    = headers.indexOf("confirm price / rate");
+                const termsCol   = headers.indexOf("payment terms");
+                const daysCol    = headers.indexOf("credit days");
+                const totalCol   = headers.indexOf("total order value");
+                const itemValCol = headers.indexOf("item value");
+                const delivCol   = headers.indexOf("deliver date");
+                const matCol     = headers.indexOf("material availability");
+                const transCol   = headers.indexOf("transport type & charges including");
+                const inspCol    = headers.indexOf("inspection / testing");
+                const mtcCol     = headers.indexOf("mtc requirement");
+                const endCol     = headers.indexOf("endorsement mtc");
+                const specCol    = headers.indexOf("special instruction");
+                const docCol     = headers.indexOf("po / ref document");
+
+                // Populate Form with Common PO Fields from the First Row
+                const first = rows[0];
+                document.getElementById('poNumberInput').value = first[poNumCol] || query;
+                document.getElementById('clientNameInput').value = first[clientCol] || "";
+                document.getElementById('salesPersonInput').value = first[salesCol] || "";
+                
+                // Format PO Date
+                const rawPoDate = (first[poDateCol] || "").toString().split('T')[0];
+                if (rawPoDate.includes('-')) {
+                    const parts = rawPoDate.split('-');
+                    document.getElementById('poDateInput').value = parts[0].length === 4 ? rawPoDate : `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+
+                document.getElementById('paymentTerms').value = first[termsCol] || "";
+                document.getElementById('creditDaysInput').value = first[daysCol] || "";
+                document.getElementById('inputTotalValue').value = first[totalCol] || "";
+
+                const rawDelivDate = (first[delivCol] || "").toString().split('T')[0];
+                if (rawDelivDate.includes('-')) {
+                    const parts = rawDelivDate.split('-');
+                    document.getElementById('inputDeliveryDate').value = parts[0].length === 4 ? rawDelivDate : `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+
+                document.getElementById('materialAvailability').value = (first[matCol] || "").toString().split(" - Location")[0];
+                document.querySelector('tr[data-field-key="transport"] select').value = first[transCol] || "";
+                document.getElementById('inspectionSelect').value = first[inspCol] || "";
+                document.querySelector('tr[data-field-key="mtcReq"] select').value = first[mtcCol] || "";
+                document.getElementById('inputEndorsement').value = first[endCol] || "";
+                document.getElementById('inputSpecial').value = first[specCol] || "";
+
+                if (docCol !== -1 && first[docCol] && first[docCol].toString().startsWith("http")) {
+                    savedDriveLink = first[docCol].toString().trim();
+                }
+
+                // Populate All Multi-Items
+                poItemsList = [];
+                rows.forEach(r => {
+                    poItemsList.push({
+                        size: sizesCol !== -1 ? r[sizesCol] : "-",
+                        pcs: pcsCol !== -1 ? r[pcsCol] : "-",
+                        qty: qtyCol !== -1 ? r[qtyCol] : "-",
+                        grade: gradeCol !== -1 ? r[gradeCol] : "-",
+                        make: makeCol !== -1 ? r[makeCol] : "-",
+                        rate: rateCol !== -1 ? r[rateCol] : "-",
+                        itemVal: itemValCol !== -1 ? r[itemValCol] : "-"
+                    });
+                });
+
+                updateQueueUI();
+                statusMsg.style.color = "#16a34a";
+                statusMsg.textContent = `Loaded ${poItemsList.length} item(s) for PO "${query}" successfully! You can now share on WhatsApp.`;
+                setTimeout(() => { statusMsg.style.display = "none"; }, 4000);
+
+            } catch (err) {
+                statusMsg.style.color = "#dc2626";
+                statusMsg.textContent = "Error fetching PO: " + err.message;
+            }
+        }
+
+        function checkPaymentTerms() {
+            const paymentTerms = document.getElementById('paymentTerms').value;
+            const creditInput = document.getElementById('creditDaysInput');
+            const creditCheckbox = document.getElementById('creditDaysCheckbox');
+            if (paymentTerms === 'Advance') {
+                creditInput.value = 'None';
+                creditInput.style.backgroundColor = '#e9ecef';
+                creditInput.setAttribute('readonly', true);
+                creditCheckbox.checked = false;
+                creditCheckbox.disabled = true;
+            } else {
+                if (creditInput.value === 'None') creditInput.value = '';
+                creditInput.style.backgroundColor = '';
+                creditInput.removeAttribute('readonly');
+                creditCheckbox.disabled = false;
+            }
+        }
+
+        function checkMaterialAvailability() {
+            const matSelect = document.getElementById('materialAvailability');
+            const locationInput = document.getElementById('outsideLocation');
+            if (matSelect.value === 'OUTSIDE') {
+                locationInput.style.display = 'block';
+                if (locationInput.value === 'None') locationInput.value = '';
+            } else {
+                locationInput.style.display = 'none';
+                locationInput.value = '';
+            }
+        }
+
+        async function sendOrderData() {
+            const poNum = document.getElementById('poNumberInput').value.trim();
+            const clientName = document.getElementById('clientNameInput').value.trim();
+            const poDate = formatToDDMMYYYY(document.getElementById('poDateInput').value);
+            const salesPerson = document.getElementById('salesPersonInput').value.trim();
+            const timestamp = document.getElementById('datetimeDisplay').textContent.replace("Date & Time: ", "");
+            const fileInput = document.getElementById('fileUpload');
+
+            let fileData = null;
+            if (fileInput.files.length > 0) fileData = await getBase64(fileInput.files[0]);
+
+            const headers = [timestamp, poNum, clientName, poDate, salesPerson];
+            
+            const confirmSizes = document.getElementById('inputSizes').value.trim();
+            const pieces = document.getElementById('inputPieces').value.trim() || "-";
+            const qty = document.getElementById('inputQuantity').value.trim() || "-";
+            const grade = document.getElementById('inputGrade').value.trim();
+            const make = document.getElementById('inputMake').value.trim();
+            const priceRate = document.getElementById('inputPriceRate').value.trim() || "-";
+            const paymentTerms = document.getElementById('paymentTerms').value;
+            const creditDays = document.getElementById('creditDaysInput').value.trim() || "-";
+            
+            const totalOrderValue = document.getElementById('inputTotalValue').value.trim() || "-";
+            const itemValue = document.getElementById('inputItemValue').value.trim() || "-";
+
+            const deliverDate = formatToDDMMYYYY(document.getElementById('inputDeliveryDate').value);
+            
+            let matAvail = document.getElementById('materialAvailability').value;
+            const outsideLoc = document.getElementById('outsideLocation').value.trim();
+            if (matAvail === 'OUTSIDE' && outsideLoc && outsideLoc !== 'None') {
+                matAvail += " - Location: " + outsideLoc;
+            }
+
+            const transport = document.querySelector('tr[data-field-key="transport"] select').value;
+            const inspection = document.getElementById('inspectionSelect').value;
+            const mtcReq = document.querySelector('tr[data-field-key="mtcReq"] select').value;
+            const endorsementMtc = document.getElementById('inputEndorsement').value.trim();
+            const specialInst = document.getElementById('inputSpecial').value.trim();
+
+            const detailsItems = [
+                confirmSizes, pieces, qty, grade, make, priceRate, 
+                paymentTerms, creditDays, totalOrderValue, itemValue, 
+                deliverDate, matAvail, transport, inspection, mtcReq, 
+                endorsementMtc, specialInst
+            ];
+
+            const checkboxItems = [];
+            document.querySelectorAll('#checklistTable tbody tr').forEach(row => {
+                const cb = row.querySelector('input[type="checkbox"]');
+                checkboxItems.push(cb && cb.checked ? "Y" : "N");
+            });
+
+            const response = await fetch(GOOGLE_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ 
+                    details: headers.concat(detailsItems), 
+                    checkboxes: headers.concat(checkboxItems),
+                    fileData: fileData 
+                }) 
+            });
+
+            const resText = await response.text();
+            if (resText && resText.startsWith("http")) savedDriveLink = resText.trim();
+
+            poItemsList.push({
+                size: confirmSizes,
+                pcs: pieces,
+                qty: qty,
+                grade: grade,
+                make: make,
+                rate: priceRate,
+                itemVal: itemValue
+            });
+
+            updateQueueUI();
+            return resText;
+        }
+
+        function updateQueueUI() {
+            const count = poItemsList.length;
+            document.getElementById('poItemBadge').textContent = `Items in this PO: ${count}`;
+            document.getElementById('queueCount').textContent = count;
+            
+            const card = document.getElementById('poQueueCard');
+            const listDiv = document.getElementById('queueList');
+            
+            if (count > 0) {
+                card.style.display = 'block';
+                listDiv.innerHTML = poItemsList.map((it, idx) => `
+                    <div class="queue-item">
+                        <span><b>#${idx + 1}</b> ${it.size} | Pcs: ${it.pcs} | Qty: ${it.qty} | ${it.grade} (${it.make})</span>
+                        <span style="font-weight: 700; color: #2563eb;">₹${it.itemVal || it.rate}</span>
+                    </div>
+                `).join('');
+            } else {
+                card.style.display = 'none';
+            }
+        }
+
+        async function saveToSheets() {
+            const poNum = document.getElementById('poNumberInput').value.trim();
+            const clientName = document.getElementById('clientNameInput').value.trim();
+            const poDate = document.getElementById('poDateInput').value;
+            const salesPerson = document.getElementById('salesPersonInput').value.trim();
+            
+            if (!poNum || !clientName || !salesPerson || !poDate) {
+                return alert("Please enter PO Number, Client Name, PO Date, and Sales Person Name at the top.");
+            }
+
+            const btnSave = document.getElementById('btnSave');
+            const statusMsg = document.getElementById('statusMsg');
+
+            btnSave.disabled = true; statusMsg.style.color = "#2563eb";
+            statusMsg.textContent = "Saving this item to Sheet... Please wait."; statusMsg.style.display = "block";
+
+            try {
+                await sendOrderData();
+                statusMsg.style.color = "#16a34a"; 
+                statusMsg.textContent = `Item #${poItemsList.length} saved successfully! Ready for next item.`;
+                
+                document.getElementById('inputSizes').value = "";
+                document.getElementById('inputPieces').value = "";
+                document.getElementById('inputQuantity').value = "";
+                document.getElementById('inputGrade').value = "";
+                document.getElementById('inputMake').value = "";
+                document.getElementById('inputPriceRate').value = "";
+                document.getElementById('inputItemValue').value = "";
+                
+                setTimeout(() => { statusMsg.style.display = "none"; btnSave.disabled = false; }, 3500);
+            } catch (error) {
+                statusMsg.style.color = "#dc2626"; statusMsg.textContent = "Error saving data. Please try again."; btnSave.disabled = false;
+            }
+        }
+
+        // 📲 COMBINED MULTI-ITEM WHATSAPP SHARE (WORKS BOTH FOR NEW & LOADED POs)
+        async function shareEntirePOonWhatsApp() {
+            const poNum = document.getElementById('poNumberInput').value.trim();
+            const clientName = document.getElementById('clientNameInput').value.trim();
+            const poDate = formatToDDMMYYYY(document.getElementById('poDateInput').value);
+            const salesPerson = document.getElementById('salesPersonInput').value.trim();
+            const timestamp = document.getElementById('datetimeDisplay').textContent.replace("Date & Time: ", "");
+            const totalOrderVal = document.getElementById('inputTotalValue').value.trim();
+            const terms = document.getElementById('paymentTerms').value;
+            const creditDays = document.getElementById('creditDaysInput').value.trim();
+            const deliverDate = formatToDDMMYYYY(document.getElementById('inputDeliveryDate').value);
+
+            if (!poNum || !clientName || !salesPerson || !poDate || poDate === "-") {
+                return alert("Please ensure PO Number, Client Name, PO Date, and Sales Person are present.");
+            }
+
+            const currentItemSize = document.getElementById('inputSizes').value.trim();
+            if (currentItemSize !== "") {
+                if (confirm("You have an unsaved item currently typed in the form. Do you want to save it to sheet first?")) {
+                    await sendOrderData();
+                }
+            }
+
+            if (poItemsList.length === 0) {
+                return alert("No items loaded for this PO yet. Enter new items or use the 'Load Saved PO' bar above.");
+            }
+
+            // 1. Order Header
+            let msg = `📋 *PURCHASE ORDER CONFIRMATION*\n`;
+            msg += `🕒 _${timestamp}_\n`;
+            msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+            msg += `🔹 *PO Number:* ${poNum}\n`;
+            msg += `🔹 *Client Name:* ${clientName}\n`;
+            msg += `🔹 *PO Date:* ${poDate}\n`;
+            msg += `🔹 *Sales Person:* ${salesPerson}\n`;
+            msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+            // 2. All Items Combined & Numbered
+            msg += `📦 *ITEMIZED SPECIFICATIONS (${poItemsList.length} Item${poItemsList.length > 1 ? 's' : ''})*\n`;
+            poItemsList.forEach((it, idx) => {
+                msg += `\n*Item #${idx + 1}:*\n`;
+                if (it.size)  msg += `• Size: *${it.size}*\n`;
+                if (it.pcs)   msg += `• Pieces: ${it.pcs}\n`;
+                if (it.qty)   msg += `• Quantity: ${it.qty}\n`;
+                if (it.grade || it.make) msg += `• Grade/Make: ${it.grade || "-"} (${it.make || "-"})\n`;
+                if (it.rate)  msg += `• Rate: ₹${it.rate}\n`;
+                if (it.itemVal && it.itemVal !== "-") msg += `• Item Value: *₹${it.itemVal}*\n`;
+            });
+            msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+
+            // 3. Overall Commercials
+            msg += `💰 *COMMERCIAL & DELIVERY TERMS*\n`;
+            if (totalOrderVal) msg += `• *TOTAL ORDER VALUE:* *₹${totalOrderVal}*\n`;
+            if (terms)         msg += `• *Payment Terms:* ${terms}\n`;
+            if (creditDays && terms !== 'Advance') msg += `• *Credit Days:* ${creditDays}\n`;
+            if (deliverDate && deliverDate !== "-") msg += `• *Deliver Date:* ${deliverDate}\n`;
+            msg += `\n`;
+
+            // 4. Logistics & Inspection
+            let matAvail = document.getElementById('materialAvailability').value;
+            const outsideLoc = document.getElementById('outsideLocation').value.trim();
+            if (matAvail === 'OUTSIDE' && outsideLoc && outsideLoc !== 'None') {
+                matAvail += ` (${outsideLoc})`;
+            }
+            const transport = document.querySelector('tr[data-field-key="transport"] select').value;
+            const inspection = document.getElementById('inspectionSelect').value;
+            const mtcReq = document.querySelector('tr[data-field-key="mtcReq"] select').value;
+            const endorsement = document.getElementById('inputEndorsement').value.trim();
+            const special = document.getElementById('inputSpecial').value.trim();
+
+            msg += `🚚 *LOGISTICS & INSPECTION*\n`;
+            if (matAvail)    msg += `• *Material Availability:* ${matAvail}\n`;
+            if (transport)   msg += `• *Transport Type:* ${transport}\n`;
+            if (inspection)  msg += `• *Inspection / Testing:* ${inspection}\n`;
+            if (mtcReq)      msg += `• *MTC Requirement:* ${mtcReq}\n`;
+            if (endorsement) msg += `• *Endorsement MTC:* ${endorsement}\n`;
+            if (special)     msg += `• *Special Instruction:* ${special}\n`;
+
+           
+
+            // 5. Attached File Link
+            if (savedDriveLink && savedDriveLink.startsWith("http")) {
+                msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+                msg += `📄 *ATTACHED PO DOCUMENT:*\n${savedDriveLink}\n`;
+            }
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function startNewPO() {
+            poItemsList = [];
+            savedDriveLink = "";
+            document.getElementById('searchPoInput').value = "";
+            document.getElementById('poNumberInput').value = "";
+            document.getElementById('clientNameInput').value = "";
+            document.getElementById('salesPersonInput').value = "";
+            document.getElementById('poDateInput').value = "";
+            document.getElementById('fileUpload').value = "";
+            document.getElementById('inputTotalValue').value = "";
+            document.getElementById('inputSizes').value = "";
+            document.getElementById('inputPieces').value = "";
+            document.getElementById('inputQuantity').value = "";
+            document.getElementById('inputGrade').value = "";
+            document.getElementById('inputMake').value = "";
+            document.getElementById('inputPriceRate').value = "";
+            document.getElementById('inputItemValue').value = "";
+            document.querySelectorAll('#checklistTable input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateQueueUI();
+        }
+    </script>
+</body>
+</html>
