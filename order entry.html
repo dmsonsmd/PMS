@@ -7,16 +7,26 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 20px; max-width: 950px; margin: auto; background-color: #f8fafc; color: #1e293b; }
         
-        /* Top Utility Bar (Search past PO) */
-        .lookup-bar { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .search-container { position: relative; margin-bottom: 16px; }
+        .lookup-bar { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .lookup-bar input { flex: 1; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; }
         .lookup-bar button { padding: 9px 16px; background: #0f172a; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
         .lookup-bar button:hover { background: #334155; }
 
+        .search-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 4px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; z-index: 50; }
+        .search-item { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .search-item:last-child { border-bottom: none; }
+        .search-item:hover { background: #f8fafc; }
+        .search-po { font-weight: 700; color: #2563eb; }
+        .search-meta { font-size: 12px; color: #64748b; }
+
         .header-section { margin-bottom: 20px; padding: 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .timestamp-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .timestamp-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
         .timestamp { font-weight: bold; color: #64748b; font-size: 13px; }
+        .badges-group { display: flex; gap: 8px; align-items: center; }
+        .order-id-badge { background: #0f172a; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.4px; }
         .po-counter-badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #bae6fd; }
+        
         .top-inputs-container { display: flex; gap: 10px; margin-bottom: 10px; }
         .top-input { padding: 10px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         .upload-container { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; margin-top: 10px; }
@@ -33,33 +43,44 @@
         .task-input:focus { outline: none; border-color: #2563eb; }
         
         .button-container { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-        .btn { flex: 1; min-width: 180px; padding: 12px; color: white; font-size: 14.5px; font-weight: 700; border: none; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+        .btn { flex: 1; min-width: 170px; padding: 12px; color: white; font-size: 14.5px; font-weight: 700; border: none; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
         .save-btn { background-color: #2563eb; }
         .save-btn:hover { background-color: #1d4ed8; }
+        .update-btn { background-color: #d97706; display: none; }
+        .update-btn:hover { background-color: #b45309; }
         .wa-btn { background-color: #25D366; }
         .wa-btn:hover { background-color: #1ebe5d; }
         .reset-btn { background-color: #64748b; flex: 0.5; min-width: 120px; }
         .reset-btn:hover { background-color: #475569; }
 
         .queue-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-top: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: none; }
-        .queue-title { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; text-transform: uppercase; }
-        .queue-item { font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9; color: #475569; display: flex; justify-content: space-between; }
+        .queue-title { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; text-transform: uppercase; display: flex; justify-content: space-between; }
+        .queue-item { font-size: 13px; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #475569; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; cursor: pointer; }
+        .queue-item:hover { background: #eff6ff; }
+        .queue-item.editing { background: #fef3c7; border: 1px solid #f59e0b; }
+        .item-id-pill { background: #e2e8f0; color: #0f172a; padding: 2px 7px; border-radius: 4px; font-size: 11.5px; font-weight: 700; margin-right: 6px; }
     </style>
 </head>
 <body>
     <h2 style="margin-bottom: 14px;">Order Processing Checklist (Item Entry)</h2>
 
-    <!-- SEARCH & RE-SHARE SAVED PO BAR -->
-    <div class="lookup-bar">
-        <span style="font-weight: 700; font-size: 13px; color: #475569;">🔍 Load Saved PO:</span>
-        <input type="text" id="searchPoInput" placeholder="Enter past PO Number (e.g. LOI)">
-        <button type="button" onclick="loadSavedPO()">Fetch & Load</button>
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="lookup-bar">
+            <span style="font-weight: 700; font-size: 13px; color: #475569;">🔍 Load Order:</span>
+            <input type="text" id="searchPoInput" placeholder="Search by Order ID (DMS-2026-O1), PO Number, Client, or Sales Person..." onkeypress="if(event.key === 'Enter') loadSavedPO()">
+            <button type="button" onclick="loadSavedPO()">Search</button>
+        </div>
+        <div class="search-dropdown" id="searchResultsDropdown"></div>
     </div>
     
     <div class="header-section">
         <div class="timestamp-bar">
             <div class="timestamp" id="datetimeDisplay">Date & Time: Loading...</div>
-            <div class="po-counter-badge" id="poItemBadge">Items saved for this PO: 0</div>
+            <div class="badges-group">
+                <div class="order-id-badge" id="orderIdBadge">Order ID: New</div>
+                <div class="po-counter-badge" id="poItemBadge">Items in PO: 0</div>
+            </div>
         </div>
         
         <div class="top-inputs-container">
@@ -101,23 +122,18 @@
                 <td class="col-yn"><input type="checkbox"></td>
             </tr>
             <tr data-field-key="creditDays"><td class="col-sr">8</td><td>Credit DAYS</td><td><input type="text" class="task-input" id="creditDaysInput" placeholder="e.g. 30 DAYS"></td><td class="col-yn"><input type="checkbox" id="creditDaysCheckbox"></td></tr>
-            
-            <!-- TOTAL PO VALUE -->
             <tr data-field-key="totalOrderValue">
                 <td class="col-sr">9</td>
                 <td>TOTAL ORDER VALUE (PO Total)</td>
                 <td><input type="text" class="task-input" id="inputTotalValue" placeholder="Overall Total (e.g. 896080)"></td>
                 <td class="col-yn"><input type="checkbox"></td>
             </tr>
-
-            <!-- ITEM VALUE -->
             <tr data-field-key="itemValue">
                 <td class="col-sr">10</td>
                 <td>ITEM VALUE (Current Item)</td>
                 <td><input type="text" class="task-input" id="inputItemValue" placeholder="This Item's Value (e.g. 105600)"></td>
                 <td class="col-yn"><input type="checkbox"></td>
             </tr>
-
             <tr data-field-key="deliveryDate"><td class="col-sr">11</td><td>DELIVER DATE</td><td><input type="date" id="inputDeliveryDate" class="task-input" style="height: 35px;"></td><td class="col-yn"><input type="checkbox"></td></tr>
             <tr data-field-key="materialAvailability">
                 <td class="col-sr">12</td><td>Material availability</td>
@@ -152,25 +168,32 @@
         </tbody>
     </table>
 
-    <!-- Live Items Summary Queue -->
+    <!-- Clickable Items Queue -->
     <div class="queue-card" id="poQueueCard">
-        <div class="queue-title">📋 Items in this PO (<span id="queueCount">0</span>)</div>
+        <div class="queue-title">
+            <span>📋 Items in this Order (<span id="queueCount">0</span>)</span>
+            <span style="font-weight: 500; font-size: 11.5px; color: #64748b;">Click any item to edit it</span>
+        </div>
         <div id="queueList"></div>
     </div>
 
     <div class="button-container">
-        <button id="btnSave" class="btn save-btn" onclick="saveToSheets()">💾 Save Item to Sheet</button>
-        <button id="btnWa" class="btn wa-btn" onclick="shareEntirePOonWhatsApp()">📲 Share Combined PO on WhatsApp</button>
+        <button id="btnSave" class="btn save-btn" onclick="saveToSheets('append')">💾 Save New Item</button>
+        <button id="btnUpdate" class="btn update-btn" onclick="saveToSheets('update')">✏️ Update Selected Item</button>
+        <button id="btnWa" class="btn wa-btn" onclick="shareEntirePOonWhatsApp()">📲 Share on WhatsApp</button>
         <button id="btnReset" class="btn reset-btn" onclick="startNewPO()">🔄 New PO</button>
     </div>
     <p id="statusMsg" style="display: none; text-align: center; font-weight: bold; margin-top: 15px;"></p>
 
     <script>
-        // ⚠️ PASTE YOUR MASTER ORDER ENTRY WEB APP URL HERE:
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbz9fnnqNrNn_4NvSeVgU-cnereyFzXgo_G7sNOMAWGxbP9wylwa-IpQI2whI6V0btV69A/exec";
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwxJ0EH1gkD_jiOBW-GjH4UbHVusKNGU_qwHyyCQDFBf9teOjRqIc2jrJXSbIJ0mYgK8w/exec";
         
         let savedDriveLink = ""; 
         let poItemsList = []; 
+        let currentOrderId = "";
+        let editingItemId = "";
+        let groupedSearchResults = {};
+        let cachedHeaders = [];
 
         function formatToDDMMYYYY(val) {
             if (!val || val.indexOf('-') === -1) return val || "-";
@@ -192,15 +215,24 @@
             });
         }
 
-        // 🔍 LOAD ALREADY SAVED PO FROM SHEET
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('searchResultsDropdown');
+            if (!event.target.closest('.search-container') && dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            }
+        });
+
         async function loadSavedPO() {
             const query = document.getElementById('searchPoInput').value.trim();
-            if (!query) return alert("Please enter a PO Number to search.");
+            if (!query) return alert("Please enter an Order ID, PO Number, Client, or Sales Person.");
 
             const statusMsg = document.getElementById('statusMsg');
+            const dropdown = document.getElementById('searchResultsDropdown');
+            dropdown.style.display = 'none';
+            
             statusMsg.style.display = "block";
             statusMsg.style.color = "#2563eb";
-            statusMsg.textContent = `Searching Google Sheet for PO "${query}"...`;
+            statusMsg.textContent = `Searching database for "${query}"...`;
 
             try {
                 const response = await fetch(`${GOOGLE_APP_URL}?searchPo=${encodeURIComponent(query)}`);
@@ -208,94 +240,182 @@
 
                 if (!result.found || !result.rows || result.rows.length === 0) {
                     statusMsg.style.color = "#dc2626";
-                    statusMsg.textContent = `No saved records found for PO: "${query}".`;
+                    statusMsg.textContent = `No saved records found for: "${query}".`;
                     return;
                 }
 
-                const headers = result.headers.map(h => (h || "").toString().toLowerCase().trim());
-                const rows = result.rows;
+                cachedHeaders = result.headers.map(h => (h || "").toString().toLowerCase().trim());
+                const poNumCol  = cachedHeaders.indexOf("po number");
+                const clientCol = cachedHeaders.indexOf("client name");
+                const dateCol   = cachedHeaders.indexOf("po date");
+                const orderCol  = cachedHeaders.indexOf("order id");
 
-                // Map Indexes
-                const poNumCol   = headers.indexOf("po number");
-                const clientCol  = headers.indexOf("client name");
-                const poDateCol  = headers.indexOf("po date");
-                const salesCol   = headers.indexOf("sales person");
-                const sizesCol   = headers.indexOf("confirm sizes");
-                const pcsCol     = headers.indexOf("pieces");
-                const qtyCol     = headers.indexOf("quantity");
-                const gradeCol   = headers.indexOf("grade");
-                const makeCol    = headers.indexOf("make");
-                const rateCol    = headers.indexOf("confirm price / rate");
-                const termsCol   = headers.indexOf("payment terms");
-                const daysCol    = headers.indexOf("credit days");
-                const totalCol   = headers.indexOf("total order value");
-                const itemValCol = headers.indexOf("item value");
-                const delivCol   = headers.indexOf("deliver date");
-                const matCol     = headers.indexOf("material availability");
-                const transCol   = headers.indexOf("transport type & charges including");
-                const inspCol    = headers.indexOf("inspection / testing");
-                const mtcCol     = headers.indexOf("mtc requirement");
-                const endCol     = headers.indexOf("endorsement mtc");
-                const specCol    = headers.indexOf("special instruction");
-                const docCol     = headers.indexOf("po / ref document");
+                // Group by Order ID if present, otherwise fallback to PO Number
+                groupedSearchResults = {};
+                result.rows.forEach(row => {
+                    const ordId = orderCol !== -1 && row[orderCol] ? String(row[orderCol]).trim() : "";
+                    const po    = poNumCol !== -1 && row[poNumCol] ? String(row[poNumCol]).trim() : "Unknown";
+                    const groupKey = ordId || po;
 
-                // Populate Form with Common PO Fields from the First Row
-                const first = rows[0];
-                document.getElementById('poNumberInput').value = first[poNumCol] || query;
-                document.getElementById('clientNameInput').value = first[clientCol] || "";
-                document.getElementById('salesPersonInput').value = first[salesCol] || "";
-                
-                // Format PO Date
-                const rawPoDate = (first[poDateCol] || "").toString().split('T')[0];
-                if (rawPoDate.includes('-')) {
-                    const parts = rawPoDate.split('-');
-                    document.getElementById('poDateInput').value = parts[0].length === 4 ? rawPoDate : `${parts[2]}-${parts[1]}-${parts[0]}`;
-                }
-
-                document.getElementById('paymentTerms').value = first[termsCol] || "";
-                document.getElementById('creditDaysInput').value = first[daysCol] || "";
-                document.getElementById('inputTotalValue').value = first[totalCol] || "";
-
-                const rawDelivDate = (first[delivCol] || "").toString().split('T')[0];
-                if (rawDelivDate.includes('-')) {
-                    const parts = rawDelivDate.split('-');
-                    document.getElementById('inputDeliveryDate').value = parts[0].length === 4 ? rawDelivDate : `${parts[2]}-${parts[1]}-${parts[0]}`;
-                }
-
-                document.getElementById('materialAvailability').value = (first[matCol] || "").toString().split(" - Location")[0];
-                document.querySelector('tr[data-field-key="transport"] select').value = first[transCol] || "";
-                document.getElementById('inspectionSelect').value = first[inspCol] || "";
-                document.querySelector('tr[data-field-key="mtcReq"] select').value = first[mtcCol] || "";
-                document.getElementById('inputEndorsement').value = first[endCol] || "";
-                document.getElementById('inputSpecial').value = first[specCol] || "";
-
-                if (docCol !== -1 && first[docCol] && first[docCol].toString().startsWith("http")) {
-                    savedDriveLink = first[docCol].toString().trim();
-                }
-
-                // Populate All Multi-Items
-                poItemsList = [];
-                rows.forEach(r => {
-                    poItemsList.push({
-                        size: sizesCol !== -1 ? r[sizesCol] : "-",
-                        pcs: pcsCol !== -1 ? r[pcsCol] : "-",
-                        qty: qtyCol !== -1 ? r[qtyCol] : "-",
-                        grade: gradeCol !== -1 ? r[gradeCol] : "-",
-                        make: makeCol !== -1 ? r[makeCol] : "-",
-                        rate: rateCol !== -1 ? r[rateCol] : "-",
-                        itemVal: itemValCol !== -1 ? r[itemValCol] : "-"
-                    });
+                    if (!groupedSearchResults[groupKey]) {
+                        groupedSearchResults[groupKey] = {
+                            orderId: ordId,
+                            poNumber: po,
+                            client: row[clientCol] || "Unknown Client",
+                            date: row[dateCol] ? String(row[dateCol]).split('T')[0] : "-",
+                            rows: []
+                        };
+                    }
+                    groupedSearchResults[groupKey].rows.push(row);
                 });
 
-                updateQueueUI();
-                statusMsg.style.color = "#16a34a";
-                statusMsg.textContent = `Loaded ${poItemsList.length} item(s) for PO "${query}" successfully! You can now share on WhatsApp.`;
-                setTimeout(() => { statusMsg.style.display = "none"; }, 4000);
+                const keys = Object.keys(groupedSearchResults);
+                statusMsg.style.display = "none";
+
+                if (keys.length === 1) {
+                    applyPOToForm(keys[0]);
+                } else {
+                    dropdown.innerHTML = keys.map(k => {
+                        const g = groupedSearchResults[k];
+                        const label = g.orderId ? `${g.orderId} • PO: ${g.poNumber}` : `PO: ${g.poNumber}`;
+                        return `
+                            <div class="search-item" onclick="applyPOToForm('${k}')">
+                                <div>
+                                    <div class="search-po">${label}</div>
+                                    <div class="search-meta">Client: ${g.client}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="search-meta">Date: ${g.date}</div>
+                                    <div class="search-meta" style="color:#0f172a; font-weight:600;">${g.rows.length} Item(s)</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    dropdown.style.display = 'block';
+                }
 
             } catch (err) {
                 statusMsg.style.color = "#dc2626";
-                statusMsg.textContent = "Error fetching PO: " + err.message;
+                statusMsg.textContent = "Error fetching order: " + err.message;
             }
+        }
+
+        function applyPOToForm(groupKey) {
+            document.getElementById('searchResultsDropdown').style.display = 'none';
+            
+            const poData = groupedSearchResults[groupKey];
+            if (!poData) return;
+            const rows = poData.rows;
+            const first = rows[0];
+            
+            const poNumCol   = cachedHeaders.indexOf("po number");
+            const clientCol  = cachedHeaders.indexOf("client name");
+            const poDateCol  = cachedHeaders.indexOf("po date");
+            const salesCol   = cachedHeaders.indexOf("sales person");
+            const sizesCol   = cachedHeaders.indexOf("confirm sizes");
+            const pcsCol     = cachedHeaders.indexOf("pieces");
+            const qtyCol     = cachedHeaders.indexOf("quantity");
+            const gradeCol   = cachedHeaders.indexOf("grade");
+            const makeCol    = cachedHeaders.indexOf("make");
+            const rateCol    = cachedHeaders.indexOf("confirm price / rate");
+            const termsCol   = cachedHeaders.indexOf("payment terms");
+            const daysCol    = cachedHeaders.indexOf("credit days");
+            const totalCol   = cachedHeaders.indexOf("total order value");
+            const itemValCol = cachedHeaders.indexOf("item value");
+            const delivCol   = cachedHeaders.indexOf("deliver date");
+            const matCol     = cachedHeaders.indexOf("material availability");
+            const transCol   = cachedHeaders.indexOf("transport type & charges including");
+            const inspCol    = cachedHeaders.indexOf("inspection / testing");
+            const mtcCol     = cachedHeaders.indexOf("mtc requirement");
+            const endCol     = cachedHeaders.indexOf("endorsement mtc");
+            const specCol    = cachedHeaders.indexOf("special instruction");
+            const docCol     = cachedHeaders.indexOf("po / ref document");
+            const orderCol   = cachedHeaders.indexOf("order id");
+            const itemCol    = cachedHeaders.indexOf("item id");
+
+            currentOrderId = orderCol !== -1 && first[orderCol] ? String(first[orderCol]).trim() : "";
+            editingItemId = "";
+            document.getElementById('orderIdBadge').textContent = currentOrderId ? `Order ID: ${currentOrderId}` : "Order ID: Legacy";
+
+            document.getElementById('poNumberInput').value = first[poNumCol] || "";
+            document.getElementById('clientNameInput').value = first[clientCol] || "";
+            document.getElementById('salesPersonInput').value = first[salesCol] || "";
+            
+            const rawPoDate = (first[poDateCol] || "").toString().split('T')[0];
+            if (rawPoDate.includes('-')) {
+                const parts = rawPoDate.split('-');
+                document.getElementById('poDateInput').value = parts[0].length === 4 ? rawPoDate : `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+
+            document.getElementById('paymentTerms').value = first[termsCol] || "";
+            document.getElementById('creditDaysInput').value = first[daysCol] || "";
+            document.getElementById('inputTotalValue').value = first[totalCol] || "";
+
+            const rawDelivDate = (first[delivCol] || "").toString().split('T')[0];
+            if (rawDelivDate.includes('-')) {
+                const parts = rawDelivDate.split('-');
+                document.getElementById('inputDeliveryDate').value = parts[0].length === 4 ? rawDelivDate : `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+
+            document.getElementById('materialAvailability').value = (first[matCol] || "").toString().split(" - Location")[0];
+            document.querySelector('tr[data-field-key="transport"] select').value = first[transCol] || "";
+            document.getElementById('inspectionSelect').value = first[inspCol] || "";
+            document.querySelector('tr[data-field-key="mtcReq"] select').value = first[mtcCol] || "";
+            document.getElementById('inputEndorsement').value = first[endCol] || "";
+            document.getElementById('inputSpecial').value = first[specCol] || "";
+
+            savedDriveLink = (docCol !== -1 && first[docCol] && first[docCol].toString().startsWith("http")) ? first[docCol].toString().trim() : "";
+
+            poItemsList = rows.map(r => ({
+                itemId: itemCol !== -1 && r[itemCol] ? String(r[itemCol]).trim() : "",
+                size: sizesCol !== -1 ? r[sizesCol] : "-",
+                pcs: pcsCol !== -1 ? r[pcsCol] : "-",
+                qty: qtyCol !== -1 ? r[qtyCol] : "-",
+                grade: gradeCol !== -1 ? r[gradeCol] : "-",
+                make: makeCol !== -1 ? r[makeCol] : "-",
+                rate: rateCol !== -1 ? r[rateCol] : "-",
+                itemVal: itemValCol !== -1 ? r[itemValCol] : "-"
+            }));
+
+            clearItemInputs();
+            document.getElementById('btnSave').style.display = 'block';
+            document.getElementById('btnUpdate').style.display = 'none';
+            updateQueueUI();
+
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.style.display = "block";
+            statusMsg.style.color = "#16a34a";
+            statusMsg.textContent = `Loaded ${poItemsList.length} item(s). Click any item below to edit it, or enter a new item to add to this order.`;
+            setTimeout(() => { statusMsg.style.display = "none"; }, 4500);
+        }
+
+        // Click an item in the queue to load it into the form for editing
+        function selectItemForEdit(idx) {
+            const it = poItemsList[idx];
+            if (!it) return;
+
+            editingItemId = it.itemId;
+            document.getElementById('inputSizes').value = it.size === "-" ? "" : it.size;
+            document.getElementById('inputPieces').value = it.pcs === "-" ? "" : it.pcs;
+            document.getElementById('inputQuantity').value = it.qty === "-" ? "" : it.qty;
+            document.getElementById('inputGrade').value = it.grade === "-" ? "" : it.grade;
+            document.getElementById('inputMake').value = it.make === "-" ? "" : it.make;
+            document.getElementById('inputPriceRate').value = it.rate === "-" ? "" : it.rate;
+            document.getElementById('inputItemValue').value = it.itemVal === "-" ? "" : it.itemVal;
+
+            document.getElementById('btnUpdate').style.display = 'block';
+            document.getElementById('btnUpdate').textContent = editingItemId ? `✏️ Update ${editingItemId}` : "✏️ Update Item";
+            updateQueueUI();
+        }
+
+        function clearItemInputs() {
+            document.getElementById('inputSizes').value = "";
+            document.getElementById('inputPieces').value = "";
+            document.getElementById('inputQuantity').value = "";
+            document.getElementById('inputGrade').value = "";
+            document.getElementById('inputMake').value = "";
+            document.getElementById('inputPriceRate').value = "";
+            document.getElementById('inputItemValue').value = "";
         }
 
         function checkPaymentTerms() {
@@ -328,14 +448,30 @@
             }
         }
 
-        async function sendOrderData() {
+        async function saveToSheets(actionType) {
             const poNum = document.getElementById('poNumberInput').value.trim();
             const clientName = document.getElementById('clientNameInput').value.trim();
             const poDate = formatToDDMMYYYY(document.getElementById('poDateInput').value);
             const salesPerson = document.getElementById('salesPersonInput').value.trim();
             const timestamp = document.getElementById('datetimeDisplay').textContent.replace("Date & Time: ", "");
-            const fileInput = document.getElementById('fileUpload');
 
+            if (!poNum || !clientName || !salesPerson || !poDate || poDate === "-") {
+                return alert("Please enter PO Number, Client Name, PO Date, and Sales Person Name at the top.");
+            }
+            if (actionType === 'update' && !editingItemId) {
+                return alert("Please click an item from the list below before updating.");
+            }
+
+            const btnSave = document.getElementById('btnSave');
+            const btnUpdate = document.getElementById('btnUpdate');
+            const statusMsg = document.getElementById('statusMsg');
+
+            btnSave.disabled = true; btnUpdate.disabled = true;
+            statusMsg.style.color = "#2563eb";
+            statusMsg.textContent = actionType === 'update' ? `Updating ${editingItemId}...` : "Saving new item & generating ID...";
+            statusMsg.style.display = "block";
+
+            const fileInput = document.getElementById('fileUpload');
             let fileData = null;
             if (fileInput.files.length > 0) fileData = await getBase64(fileInput.files[0]);
 
@@ -349,10 +485,8 @@
             const priceRate = document.getElementById('inputPriceRate').value.trim() || "-";
             const paymentTerms = document.getElementById('paymentTerms').value;
             const creditDays = document.getElementById('creditDaysInput').value.trim() || "-";
-            
             const totalOrderValue = document.getElementById('inputTotalValue').value.trim() || "-";
             const itemValue = document.getElementById('inputItemValue').value.trim() || "-";
-
             const deliverDate = formatToDDMMYYYY(document.getElementById('inputDeliveryDate').value);
             
             let matAvail = document.getElementById('materialAvailability').value;
@@ -380,36 +514,62 @@
                 checkboxItems.push(cb && cb.checked ? "Y" : "N");
             });
 
-            const response = await fetch(GOOGLE_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ 
-                    details: headers.concat(detailsItems), 
-                    checkboxes: headers.concat(checkboxItems),
-                    fileData: fileData 
-                }) 
-            });
+            try {
+                const response = await fetch(GOOGLE_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: actionType,
+                        orderId: currentOrderId,
+                        itemId: actionType === 'update' ? editingItemId : "",
+                        existingFileLink: savedDriveLink,
+                        details: headers.concat(detailsItems), 
+                        checkboxes: headers.concat(checkboxItems),
+                        fileData: fileData 
+                    }) 
+                });
 
-            const resText = await response.text();
-            if (resText && resText.startsWith("http")) savedDriveLink = resText.trim();
+                const resJson = await response.json();
+                if (!resJson.success) throw new Error(resJson.error || "Save failed");
 
-            poItemsList.push({
-                size: confirmSizes,
-                pcs: pieces,
-                qty: qty,
-                grade: grade,
-                make: make,
-                rate: priceRate,
-                itemVal: itemValue
-            });
+                if (resJson.fileLink && resJson.fileLink.startsWith("http")) savedDriveLink = resJson.fileLink;
+                currentOrderId = resJson.orderId;
+                document.getElementById('orderIdBadge').textContent = `Order ID: ${currentOrderId}`;
 
-            updateQueueUI();
-            return resText;
+                const itemObj = {
+                    itemId: resJson.itemId,
+                    size: confirmSizes, pcs: pieces, qty: qty,
+                    grade: grade, make: make, rate: priceRate, itemVal: itemValue
+                };
+
+                if (actionType === 'update') {
+                    const idx = poItemsList.findIndex(x => x.itemId === resJson.itemId);
+                    if (idx !== -1) poItemsList[idx] = itemObj;
+                    editingItemId = "";
+                    btnUpdate.style.display = 'none';
+                } else {
+                    poItemsList.push(itemObj);
+                }
+
+                updateQueueUI();
+                clearItemInputs();
+
+                statusMsg.style.color = "#16a34a"; 
+                statusMsg.textContent = actionType === 'update'
+                    ? `Updated ${resJson.itemId} successfully!`
+                    : `Saved ${resJson.itemId} successfully!`;
+                
+                setTimeout(() => { statusMsg.style.display = "none"; btnSave.disabled = false; btnUpdate.disabled = false; }, 3500);
+            } catch (error) {
+                statusMsg.style.color = "#dc2626";
+                statusMsg.textContent = "Error: " + error.message;
+                btnSave.disabled = false; btnUpdate.disabled = false;
+            }
         }
 
         function updateQueueUI() {
             const count = poItemsList.length;
-            document.getElementById('poItemBadge').textContent = `Items in this PO: ${count}`;
+            document.getElementById('poItemBadge').textContent = `Items in PO: ${count}`;
             document.getElementById('queueCount').textContent = count;
             
             const card = document.getElementById('poQueueCard');
@@ -418,8 +578,11 @@
             if (count > 0) {
                 card.style.display = 'block';
                 listDiv.innerHTML = poItemsList.map((it, idx) => `
-                    <div class="queue-item">
-                        <span><b>#${idx + 1}</b> ${it.size} | Pcs: ${it.pcs} | Qty: ${it.qty} | ${it.grade} (${it.make})</span>
+                    <div class="queue-item ${editingItemId && it.itemId === editingItemId ? 'editing' : ''}" onclick="selectItemForEdit(${idx})">
+                        <span>
+                            <span class="item-id-pill">${it.itemId || ('#' + (idx + 1))}</span>
+                            ${it.size} | Pcs: ${it.pcs} | Qty: ${it.qty} | ${it.grade} (${it.make})
+                        </span>
                         <span style="font-weight: 700; color: #2563eb;">₹${it.itemVal || it.rate}</span>
                     </div>
                 `).join('');
@@ -428,42 +591,6 @@
             }
         }
 
-        async function saveToSheets() {
-            const poNum = document.getElementById('poNumberInput').value.trim();
-            const clientName = document.getElementById('clientNameInput').value.trim();
-            const poDate = document.getElementById('poDateInput').value;
-            const salesPerson = document.getElementById('salesPersonInput').value.trim();
-            
-            if (!poNum || !clientName || !salesPerson || !poDate) {
-                return alert("Please enter PO Number, Client Name, PO Date, and Sales Person Name at the top.");
-            }
-
-            const btnSave = document.getElementById('btnSave');
-            const statusMsg = document.getElementById('statusMsg');
-
-            btnSave.disabled = true; statusMsg.style.color = "#2563eb";
-            statusMsg.textContent = "Saving this item to Sheet... Please wait."; statusMsg.style.display = "block";
-
-            try {
-                await sendOrderData();
-                statusMsg.style.color = "#16a34a"; 
-                statusMsg.textContent = `Item #${poItemsList.length} saved successfully! Ready for next item.`;
-                
-                document.getElementById('inputSizes').value = "";
-                document.getElementById('inputPieces').value = "";
-                document.getElementById('inputQuantity').value = "";
-                document.getElementById('inputGrade').value = "";
-                document.getElementById('inputMake').value = "";
-                document.getElementById('inputPriceRate').value = "";
-                document.getElementById('inputItemValue').value = "";
-                
-                setTimeout(() => { statusMsg.style.display = "none"; btnSave.disabled = false; }, 3500);
-            } catch (error) {
-                statusMsg.style.color = "#dc2626"; statusMsg.textContent = "Error saving data. Please try again."; btnSave.disabled = false;
-            }
-        }
-
-        // 📲 COMBINED MULTI-ITEM WHATSAPP SHARE (WORKS BOTH FOR NEW & LOADED POs)
         async function shareEntirePOonWhatsApp() {
             const poNum = document.getElementById('poNumberInput').value.trim();
             const clientName = document.getElementById('clientNameInput').value.trim();
@@ -478,32 +605,17 @@
             if (!poNum || !clientName || !salesPerson || !poDate || poDate === "-") {
                 return alert("Please ensure PO Number, Client Name, PO Date, and Sales Person are present.");
             }
-
-            const currentItemSize = document.getElementById('inputSizes').value.trim();
-            if (currentItemSize !== "") {
-                if (confirm("You have an unsaved item currently typed in the form. Do you want to save it to sheet first?")) {
-                    await sendOrderData();
-                }
-            }
-
             if (poItemsList.length === 0) {
-                return alert("No items loaded for this PO yet. Enter new items or use the 'Load Saved PO' bar above.");
+                return alert("No items logged yet.");
             }
 
-            // 1. Order Header
-            let msg = `📋 *PURCHASE ORDER CONFIRMATION*\n`;
-            msg += `🕒 _${timestamp}_\n`;
-            msg += `━━━━━━━━━━━━━━━━━━━━\n`;
-            msg += `🔹 *PO Number:* ${poNum}\n`;
-            msg += `🔹 *Client Name:* ${clientName}\n`;
-            msg += `🔹 *PO Date:* ${poDate}\n`;
-            msg += `🔹 *Sales Person:* ${salesPerson}\n`;
-            msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-            // 2. All Items Combined & Numbered
+            let msg = `📋 *PURCHASE ORDER CONFIRMATION*\n🕒 _${timestamp}_\n━━━━━━━━━━━━━━━━━━━━\n`;
+            if (currentOrderId) msg += `🆔 *Order ID:* ${currentOrderId}\n`;
+            msg += `🔹 *PO Number:* ${poNum}\n🔹 *Client Name:* ${clientName}\n🔹 *PO Date:* ${poDate}\n🔹 *Sales Person:* ${salesPerson}\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+            
             msg += `📦 *ITEMIZED SPECIFICATIONS (${poItemsList.length} Item${poItemsList.length > 1 ? 's' : ''})*\n`;
             poItemsList.forEach((it, idx) => {
-                msg += `\n*Item #${idx + 1}:*\n`;
+                msg += `\n*${it.itemId || ('Item #' + (idx + 1))}:*\n`;
                 if (it.size)  msg += `• Size: *${it.size}*\n`;
                 if (it.pcs)   msg += `• Pieces: ${it.pcs}\n`;
                 if (it.qty)   msg += `• Quantity: ${it.qty}\n`;
@@ -513,48 +625,38 @@
             });
             msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
 
-            // 3. Overall Commercials
             msg += `💰 *COMMERCIAL & DELIVERY TERMS*\n`;
             if (totalOrderVal) msg += `• *TOTAL ORDER VALUE:* *₹${totalOrderVal}*\n`;
             if (terms)         msg += `• *Payment Terms:* ${terms}\n`;
             if (creditDays && terms !== 'Advance') msg += `• *Credit Days:* ${creditDays}\n`;
-            if (deliverDate && deliverDate !== "-") msg += `• *Deliver Date:* ${deliverDate}\n`;
-            msg += `\n`;
+            if (deliverDate && deliverDate !== "-") msg += `• *Deliver Date:* ${deliverDate}\n\n`;
 
-            // 4. Logistics & Inspection
             let matAvail = document.getElementById('materialAvailability').value;
             const outsideLoc = document.getElementById('outsideLocation').value.trim();
-            if (matAvail === 'OUTSIDE' && outsideLoc && outsideLoc !== 'None') {
-                matAvail += ` (${outsideLoc})`;
-            }
+            if (matAvail === 'OUTSIDE' && outsideLoc && outsideLoc !== 'None') matAvail += ` (${outsideLoc})`;
             const transport = document.querySelector('tr[data-field-key="transport"] select').value;
             const inspection = document.getElementById('inspectionSelect').value;
             const mtcReq = document.querySelector('tr[data-field-key="mtcReq"] select').value;
-            const endorsement = document.getElementById('inputEndorsement').value.trim();
-            const special = document.getElementById('inputSpecial').value.trim();
 
             msg += `🚚 *LOGISTICS & INSPECTION*\n`;
-            if (matAvail)    msg += `• *Material Availability:* ${matAvail}\n`;
-            if (transport)   msg += `• *Transport Type:* ${transport}\n`;
-            if (inspection)  msg += `• *Inspection / Testing:* ${inspection}\n`;
-            if (mtcReq)      msg += `• *MTC Requirement:* ${mtcReq}\n`;
-            if (endorsement) msg += `• *Endorsement MTC:* ${endorsement}\n`;
-            if (special)     msg += `• *Special Instruction:* ${special}\n`;
+            if (matAvail)   msg += `• *Material Availability:* ${matAvail}\n`;
+            if (transport)  msg += `• *Transport Type:* ${transport}\n`;
+            if (inspection) msg += `• *Inspection:* ${inspection}\n`;
+            if (mtcReq)     msg += `• *MTC Requirement:* ${mtcReq}\n`;
 
-           
-
-            // 5. Attached File Link
             if (savedDriveLink && savedDriveLink.startsWith("http")) {
-                msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
-                msg += `📄 *ATTACHED PO DOCUMENT:*\n${savedDriveLink}\n`;
+                msg += `\n━━━━━━━━━━━━━━━━━━━━\n📄 *ATTACHED PO DOCUMENT:*\n${savedDriveLink}\n`;
             }
 
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         function startNewPO() {
+            currentOrderId = "";
+            editingItemId = "";
             poItemsList = [];
             savedDriveLink = "";
+            document.getElementById('orderIdBadge').textContent = "Order ID: New";
             document.getElementById('searchPoInput').value = "";
             document.getElementById('poNumberInput').value = "";
             document.getElementById('clientNameInput').value = "";
@@ -562,14 +664,11 @@
             document.getElementById('poDateInput').value = "";
             document.getElementById('fileUpload').value = "";
             document.getElementById('inputTotalValue').value = "";
-            document.getElementById('inputSizes').value = "";
-            document.getElementById('inputPieces').value = "";
-            document.getElementById('inputQuantity').value = "";
-            document.getElementById('inputGrade').value = "";
-            document.getElementById('inputMake').value = "";
-            document.getElementById('inputPriceRate').value = "";
-            document.getElementById('inputItemValue').value = "";
+            clearItemInputs();
             document.querySelectorAll('#checklistTable input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('btnSave').style.display = 'block';
+            document.getElementById('btnUpdate').style.display = 'none';
+            document.getElementById('searchResultsDropdown').style.display = 'none';
             updateQueueUI();
         }
     </script>
