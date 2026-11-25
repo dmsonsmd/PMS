@@ -30,8 +30,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-dark); }
         .clock { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
@@ -50,7 +52,40 @@
         }
         .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-weight: 700; }
 
-        /* Master Pending List Table */
+        /* Search Bar */
+        .search-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .search-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            color: var(--text-dark);
+            background: transparent;
+        }
+        .search-clear-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: none;
+        }
+        .search-clear-btn:hover { background: #e2e8f0; color: var(--text-dark); }
+
+        /* Master Pending/Completed List Table */
         .table-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -59,12 +94,15 @@
             margin-bottom: 24px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .table-scroll { max-height: 250px; overflow-y: auto; }
+        .table-scroll { max-height: 260px; overflow-y: auto; }
         table.master-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
         table.master-table th { background: #f8fafc; color: var(--text-muted); padding: 12px 14px; position: sticky; top: 0; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
         table.master-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }
         table.master-table tr:hover td { background-color: #f1f5f9; }
         table.master-table tr.selected td { background-color: #e0f2fe; color: #0369a1; font-weight: 600; }
+
+        .badge-go { background: #dcfce7; color: #15803d; padding: 3px 9px; border-radius: 12px; font-weight: 700; font-size: 11.5px; }
+        .badge-hold { background: #fee2e2; color: #b91c1c; padding: 3px 9px; border-radius: 12px; font-weight: 700; font-size: 11.5px; }
 
         /* Workspace Review Card */
         .review-card {
@@ -85,68 +123,35 @@
         }
         .section-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
 
-        /* Metrics summary row */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 20px;
         }
-        .stat-box {
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 16px;
-        }
+        .stat-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
         .stat-box .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
         .stat-box .stat-val { font-size: 15px; font-weight: 700; color: var(--text-dark); word-break: break-word; }
         .stat-box.highlight { background: #eff6ff; border-color: #bfdbfe; }
         .stat-box.highlight .stat-val { color: var(--primary); font-size: 18px; }
 
-        /* Detailed Line Items Table */
-        .item-details-box {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
+        .item-details-box { background: #ffffff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
         .box-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; display: flex; justify-content: space-between; }
         table.items-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
         table.items-table th { background: #f8fafc; color: #475569; padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
         table.items-table td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; color: var(--text-dark); }
 
-        /* Additional Meta Fields */
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        .meta-field {
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .meta-field { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
         .meta-field span:first-child { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
         .meta-field span:last-child { font-size: 13.5px; font-weight: 600; color: var(--text-dark); }
 
         /* Approval Actions Box */
-        .actions-panel {
-            background: #fafafa;
-            border: 1px dashed #cbd5e1;
-            border-radius: 10px;
-            padding: 18px;
-            margin-top: 10px;
-        }
+        .actions-panel { background: #fafafa; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 18px; margin-top: 10px; }
         .type-selector { display: flex; gap: 24px; align-items: center; margin-bottom: 16px; }
         .type-selector label { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        .internal-controls {
+        .controls-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
@@ -172,12 +177,10 @@
         .status-btn.active-hold { background: var(--danger); color: #fff; border-color: var(--danger); }
         .status-btn.active-go { background: var(--success); color: #fff; border-color: var(--success); }
 
-        /* Document Links */
         .doc-link { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-weight: 600; font-size: 13px; text-decoration: none; padding: 6px 10px; background: #eff6ff; border-radius: 6px; }
         .doc-link:hover { text-decoration: underline; }
         .no-doc { color: #94a3b8; font-size: 13px; }
 
-        /* Save & Share Buttons */
         .footer-buttons { display: flex; gap: 14px; margin-top: 20px; }
         .btn-submit { flex: 1; padding: 13px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .btn-sheet { background: var(--primary); color: #fff; }
@@ -204,23 +207,31 @@
         </div>
     </div>
 
-    <!-- Master Pending Table -->
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="orderSearchInput" placeholder="Search by Order ID, PO Number, Client Name, or Sales Person..." oninput="handleSearch()">
+        <button type="button" id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()">✕ Clear</button>
+    </div>
+
+    <!-- Master Pending / Completed Table -->
     <div class="table-card">
         <div class="table-scroll">
             <table class="master-table">
-                <thead>
+                <thead id="ordersTableHead">
                     <tr>
                         <th>Deliver Date</th>
+                        <th>Order ID</th>
                         <th>PO Number</th>
                         <th>Client Name</th>
                         <th>Sales Person</th>
                         <th>Credit Days</th>
                         <th>Overall Order Value</th>
-                        <th>Items Count</th>
+                        <th>Items / Status</th>
                     </tr>
                 </thead>
                 <tbody id="ordersTableBody">
-                    <tr><td colspan="7" class="empty-placeholder">Fetching records from sheet...</td></tr>
+                    <tr><td colspan="8" class="empty-placeholder">Fetching records from sheet...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -240,7 +251,7 @@
                 <div class="stat-val" id="dispTotalVal">₹ 0.00</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">PO Number & Date</div>
+                <div class="stat-label">Order ID / PO & Date</div>
                 <div class="stat-val" id="dispPoInfo">-</div>
             </div>
             <div class="stat-box">
@@ -294,18 +305,20 @@
 
         <!-- Actions Box -->
         <div class="actions-panel">
+            <!-- Default Radio: Internal -->
             <div class="type-selector">
-                <label><input type="radio" name="orderType" value="External" checked onchange="toggleType()"> External Verification</label>
-                <label><input type="radio" name="orderType" value="Internal" onchange="toggleType()"> Internal Credit</label>
+                <label><input type="radio" name="orderType" value="Internal" checked onchange="toggleType()"> Internal Credit</label>
+                <label><input type="radio" name="orderType" value="External" onchange="toggleType()"> External Verification</label>
             </div>
 
-            <div id="internalControls" class="internal-controls" style="display: none;">
-                <div class="input-group">
+            <!-- Credit Limit (Internal only) + HOLD / GO (Always visible for both Internal & External) -->
+            <div class="controls-grid">
+                <div class="input-group" id="creditLimitGroup">
                     <label>Credit Limit (₹)</label>
                     <input type="number" id="formCreditLimit" placeholder="Enter approved limit" oninput="checkLimit()">
                 </div>
                 <div class="input-group">
-                    <label>Dispatch Approval</label>
+                    <label>Dispatch Approval (HOLD / GO)</label>
                     <div class="status-btn-group">
                         <button type="button" id="btnHold" class="status-btn" onclick="setStatus('HOLD')">HOLD</button>
                         <button type="button" id="btnGO" class="status-btn" onclick="setStatus('GO')">GO</button>
@@ -323,14 +336,12 @@
 </div>
 
 <script>
-    // ⚠️ PASTE YOUR ACTIVE CREDIT APPS SCRIPT DEPLOYMENT URL HERE
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzRd3PsRPTsLn5usn5BFwaMVOa0XZ2r2AkAYGQ6Be8M3l-zq3JC6ZgFfyYQ5qG_sf5dMg/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzOPrRedaOzuDsLWxM5lKDREw-7490M1T_RPxq4gaJDaTdOLO4sNRLryMr3AYVlgMbC1A/exec";
 
     let pendingOrders = [];
     let completedOrders = [];
     let currentTab = "pending";
     let selectedOrder = null;
-    let selectedIndex = -1;
     let currentStatus = "";
 
     function updateClock() {
@@ -353,8 +364,8 @@
 
                 renderTable();
             })
-            .catch(err => {
-                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Failed to fetch orders.</td></tr>`;
+            .catch(() => {
+                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="8" style="color:red; text-align:center;">Failed to fetch orders.</td></tr>`;
             });
     }
 
@@ -366,61 +377,97 @@
         renderTable();
     }
 
+    function handleSearch() {
+        const q = document.getElementById('orderSearchInput').value.trim();
+        document.getElementById('searchClearBtn').style.display = q ? 'inline-block' : 'none';
+        renderTable();
+    }
+
+    function clearSearch() {
+        document.getElementById('orderSearchInput').value = '';
+        document.getElementById('searchClearBtn').style.display = 'none';
+        renderTable();
+    }
+
+    function getFilteredList() {
+        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
+        const q = document.getElementById('orderSearchInput').value.trim().toLowerCase();
+        if (!q) return list;
+
+        return list.filter(order => {
+            const haystack = [
+                order.orderId || "",
+                order.poNumber || "",
+                order.client || "",
+                order.salesPerson || "",
+                order.status || "",
+                order.type || ""
+            ].join(" ").toLowerCase();
+            return haystack.includes(q);
+        });
+    }
+
     function renderTable() {
         const tbody = document.getElementById('ordersTableBody');
-        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
+        const list = getFilteredList();
 
         if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="empty-placeholder">No ${currentTab} orders found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-placeholder">No matching ${currentTab} orders found.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = '';
-        list.forEach((order, index) => {
+        list.forEach((order) => {
             const count = (order.itemList || []).length || 1;
+            const statusUpper = (order.status || "").toUpperCase();
+            const statusBadge = currentTab === 'completed'
+                ? (statusUpper === 'GO'
+                    ? `<span class="badge-go">GO (${order.type || '-'})</span>`
+                    : `<span class="badge-hold">${statusUpper || 'HOLD'} (${order.type || '-'})</span>`)
+                : `<span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-weight:700;">${count} Item(s)</span>`;
+
             const tr = document.createElement('tr');
+            if (selectedOrder && selectedOrder === order) tr.classList.add('selected');
             tr.innerHTML = `
                 <td><b>${order.deliveryDate || "-"}</b></td>
+                <td><b>${order.orderId || "-"}</b></td>
                 <td><b>${order.poNumber || "-"}</b></td>
                 <td>${order.client}</td>
                 <td>${order.salesPerson}</td>
                 <td>${order.creditDays || "-"}</td>
-                <td><b>₹ ${order.overallTotal || order.totalOrderValue}</b></td>
-                <td><span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-weight:700;">${count}</span></td>
+                <td><b>₹ ${order.overallTotal || order.totalOrderValue || "0"}</b></td>
+                <td>${statusBadge}</td>
             `;
-            tr.onclick = () => selectRow(index, tr);
+            tr.onclick = () => selectOrder(order, tr);
             tbody.appendChild(tr);
         });
     }
 
-    function selectRow(index, rowEl) {
+    function selectOrder(order, rowEl) {
         document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
         rowEl.classList.add('selected');
 
-        selectedIndex = index;
-        const list = currentTab === 'pending' ? pendingOrders : completedOrders;
-        selectedOrder = list[index];
+        selectedOrder = order;
 
         // Fill Metrics Cards
-        document.getElementById('dispTotalVal').textContent = "₹ " + (selectedOrder.overallTotal || selectedOrder.totalOrderValue || "0");
-        document.getElementById('dispPoInfo').textContent = `${selectedOrder.poNumber || "-"} (${selectedOrder.poDate || "-"})`;
-        document.getElementById('dispClient').textContent = selectedOrder.client;
-        document.getElementById('dispDeliveryInfo').textContent = `${selectedOrder.deliveryDate || "-"} (${selectedOrder.creditDays || "30"} Days)`;
+        document.getElementById('dispTotalVal').textContent = "₹ " + (order.overallTotal || order.totalOrderValue || "0");
+        document.getElementById('dispPoInfo').textContent = `${order.orderId ? order.orderId + ' • ' : ''}${order.poNumber || "-"} (${order.poDate || "-"})`;
+        document.getElementById('dispClient').textContent = order.client;
+        document.getElementById('dispDeliveryInfo').textContent = `${order.deliveryDate || "-"} (${order.creditDays || "-"} Days)`;
 
-        document.getElementById('dispTransport').textContent = selectedOrder.transportType || "-";
-        document.getElementById('dispInspection').textContent = selectedOrder.inspectionType || "-";
-        document.getElementById('dispSales').textContent = selectedOrder.salesPerson || "-";
+        document.getElementById('dispTransport').textContent = order.transportType || "-";
+        document.getElementById('dispInspection').textContent = order.inspectionType || "-";
+        document.getElementById('dispSales').textContent = order.salesPerson || "-";
 
         // Render Clean Itemized Table
         const itemTbody = document.getElementById('itemsTableBody');
-        const rawItems = selectedOrder.itemList || [];
+        const rawItems = order.itemList || [];
 
         if (rawItems.length > 0) {
             itemTbody.innerHTML = "";
             document.getElementById('dispItemCount').textContent = `${rawItems.length} Item(s)`;
 
             rawItems.forEach((str, i) => {
-                // Expected format: "10MM X 2500 X 6000 | Pcs: 1 | Qty: 1200 | SA516 GR70 (AMNS) @ Rate: 88000"
                 const parts = str.split('|');
                 const size = (parts[0] || "-").trim();
                 const pcs = (parts[1] || "-").replace('Pcs:', '').trim();
@@ -440,24 +487,14 @@
                 itemTbody.appendChild(tr);
             });
         } else {
-            // Fallback for single legacy orders
-            document.getElementById('dispItemCount').textContent = `1 Item`;
-            itemTbody.innerHTML = `
-                <tr>
-                    <td>1</td>
-                    <td>${selectedOrder.confirmSizes || "-"}</td>
-                    <td>${selectedOrder.pieces || "-"}</td>
-                    <td>${selectedOrder.quantity || "-"}</td>
-                    <td>${selectedOrder.grade || "-"} (${selectedOrder.make || "-"})</td>
-                    <td>${selectedOrder.confirmPriceRate || "-"}</td>
-                </tr>
-            `;
+            document.getElementById('dispItemCount').textContent = `0 Items`;
+            itemTbody.innerHTML = `<tr><td colspan="6" class="empty-placeholder" style="padding: 12px;">No itemized records found in Master sheet for this order.</td></tr>`;
         }
 
         // Render Attached Document Link
         const docArea = document.getElementById('docAttachmentArea');
-        if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
-            docArea.innerHTML = `<a href="${selectedOrder.poDocLink}" target="_blank" class="doc-link">📄 View Attached PO Document</a>`;
+        if (order.poDocLink && order.poDocLink.startsWith("http")) {
+            docArea.innerHTML = `<a href="${order.poDocLink}" target="_blank" class="doc-link">📄 View Attached PO Document</a>`;
         } else {
             docArea.innerHTML = `<span class="no-doc">No Document Attached</span>`;
         }
@@ -466,27 +503,24 @@
         const btnSave = document.getElementById('btnSave');
         if (currentTab === 'completed') {
             btnSave.style.display = 'none';
-            const isInternal = (selectedOrder.type || "").toLowerCase() === "internal";
-            document.querySelector(`input[name="orderType"][value="${isInternal ? 'Internal' : 'External'}"]`).checked = true;
-            if (isInternal) {
-                document.getElementById('internalControls').style.display = 'grid';
-                document.getElementById('formCreditLimit').value = selectedOrder.creditLimit || '0';
-                setStatus((selectedOrder.status || "").toUpperCase());
-            } else {
-                document.getElementById('internalControls').style.display = 'none';
-            }
+            const isExternal = (order.type || "").toLowerCase() === "external";
+            document.querySelector(`input[name="orderType"][value="${isExternal ? 'External' : 'Internal'}"]`).checked = true;
+            document.getElementById('creditLimitGroup').style.display = isExternal ? 'none' : 'flex';
+            document.getElementById('formCreditLimit').value = isExternal ? '' : (order.creditLimit || '0');
+            setStatus((order.status || "").toUpperCase());
         } else {
             btnSave.style.display = 'block';
-            document.querySelector('input[name="orderType"][value="External"]').checked = true;
-            document.getElementById('internalControls').style.display = 'none';
+            document.querySelector('input[name="orderType"][value="Internal"]').checked = true;
+            document.getElementById('creditLimitGroup').style.display = 'flex';
             document.getElementById('formCreditLimit').value = '';
             clearStatusStyles();
+            currentStatus = "";
         }
     }
 
     function resetWorkspace() {
         selectedOrder = null;
-        selectedIndex = -1;
+        currentStatus = "";
         document.getElementById('dispTotalVal').textContent = "₹ 0.00";
         document.getElementById('dispPoInfo').textContent = "-";
         document.getElementById('dispClient').textContent = "-";
@@ -497,13 +531,16 @@
         document.getElementById('dispItemCount').textContent = "0 Items";
         document.getElementById('docAttachmentArea').innerHTML = `<span class="no-doc">No order selected</span>`;
         document.getElementById('itemsTableBody').innerHTML = `<tr><td colspan="6" class="empty-placeholder" style="padding: 12px;">Select an order above to review item specifications.</td></tr>`;
-        document.getElementById('internalControls').style.display = 'none';
+        document.querySelector('input[name="orderType"][value="Internal"]').checked = true;
+        document.getElementById('creditLimitGroup').style.display = 'flex';
+        document.getElementById('formCreditLimit').value = '';
+        document.getElementById('btnSave').style.display = currentTab === 'pending' ? 'block' : 'none';
         clearStatusStyles();
     }
 
     function toggleType() {
         const isInternal = document.querySelector('input[name="orderType"]:checked').value === "Internal";
-        document.getElementById('internalControls').style.display = isInternal ? 'grid' : 'none';
+        document.getElementById('creditLimitGroup').style.display = isInternal ? 'flex' : 'none';
         if (isInternal) checkLimit();
     }
 
@@ -529,15 +566,17 @@
 
         const type = document.querySelector('input[name="orderType"]:checked').value;
         const limit = document.getElementById('formCreditLimit').value.trim();
+        const statusVal = currentStatus || (selectedOrder.status || "").toUpperCase();
         const timestamp = new Date().toLocaleString();
 
         let msg = `*Credit Approval Verification*\n_${timestamp}_\n\n`;
+        if (selectedOrder.orderId) msg += `*Order ID:* ${selectedOrder.orderId}\n`;
         msg += `*PO Number:* ${selectedOrder.poNumber || "-"}\n`;
         msg += `*Client Name:* ${selectedOrder.client}\n`;
         msg += `*PO Date:* ${selectedOrder.poDate || "-"}\n`;
-        msg += `*DELIVER DATE:* ${selectedOrder.deliveryDate}\n`;
-        msg += `*Overall Order Value:* ₹ ${selectedOrder.overallTotal || selectedOrder.totalOrderValue}\n`;
-        msg += `*Credit Days:* ${selectedOrder.creditDays}\n\n`;
+        msg += `*DELIVER DATE:* ${selectedOrder.deliveryDate || "-"}\n`;
+        msg += `*Overall Order Value:* ₹ ${selectedOrder.overallTotal || selectedOrder.totalOrderValue || "0"}\n`;
+        msg += `*Credit Days:* ${selectedOrder.creditDays || "-"}\n\n`;
 
         if (selectedOrder.itemList && selectedOrder.itemList.length > 0) {
             msg += `*Itemized Specifications (${selectedOrder.itemList.length}):*\n`;
@@ -549,9 +588,9 @@
 
         msg += `*Type:* ${type}\n`;
         if (type === 'Internal') {
-            msg += `*Credit Limit:* ₹ ${limit || "0"}\n`;
-            msg += `*Status:* ${currentStatus === 'HOLD' ? '⛔ HOLD' : (currentStatus === 'GO' ? '✅ GO' : 'Not Set')}\n`;
+            msg += `*Credit Limit:* ₹ ${limit || selectedOrder.creditLimit || "0"}\n`;
         }
+        msg += `*Status:* ${statusVal === 'HOLD' ? '⛔ HOLD' : (statusVal === 'GO' ? '✅ GO' : 'Not Set')}\n`;
 
         if (selectedOrder.poDocLink && selectedOrder.poDocLink.startsWith("http")) {
             msg += `\n*PO Document:* ${selectedOrder.poDocLink}\n`;
@@ -561,13 +600,16 @@
     }
 
     async function saveToSheet() {
-        if (!selectedOrder || selectedIndex === -1) {
+        if (!selectedOrder) {
             return alert("Please select an order from the table first.");
+        }
+        if (!currentStatus) {
+            return alert("Please select HOLD or GO before saving.");
         }
 
         const type = document.querySelector('input[name="orderType"]:checked').value;
         const limit = type === 'Internal' ? (document.getElementById('formCreditLimit').value.trim() || "0") : "-";
-        const status = type === 'Internal' ? (currentStatus || "HOLD") : "-";
+        const status = currentStatus;
         const timestamp = new Date().toLocaleString();
         const statusMsg = document.getElementById('statusMsg');
         const btnSave = document.getElementById('btnSave');
@@ -585,7 +627,8 @@
             selectedOrder.inspectionType || "-",
             type,
             limit,
-            status
+            status,
+            selectedOrder.orderId || ""
         ];
 
         statusMsg.style.display = "block";
@@ -608,7 +651,9 @@
 
             const savedItem = { ...selectedOrder, type, creditLimit: limit, status, timestamp };
             completedOrders.unshift(savedItem);
-            pendingOrders.splice(selectedIndex, 1);
+
+            const idxInPending = pendingOrders.indexOf(selectedOrder);
+            if (idxInPending !== -1) pendingOrders.splice(idxInPending, 1);
 
             document.getElementById('pendingCount').textContent = pendingOrders.length;
             document.getElementById('completedCount').textContent = completedOrders.length;
