@@ -20,7 +20,7 @@
         body { background-color: var(--bg); margin: 0; padding: 24px; color: var(--text-dark); }
         .container { max-width: 1250px; margin: auto; }
         
-        .header-box { background: var(--card-bg); padding: 18px 24px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .header-box { background: var(--card-bg); padding: 18px 24px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .header-box h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-dark); }
         .clock { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
         
@@ -32,6 +32,22 @@
         .tab-group { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 28px; }
         .tab-btn { border: none; background: transparent; padding: 8px 16px; border-radius: 24px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
         .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-weight: 700; }
+
+        /* Search Bar */
+        .search-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; color: var(--text-dark); background: transparent; }
+        .search-clear-btn { background: #edf2f7; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; display: none; }
+        .search-clear-btn:hover { background: #e2e8f0; color: var(--text-dark); }
 
         /* Master Table */
         .table-card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
@@ -107,22 +123,30 @@
         </div>
     </div>
 
-    <!-- Master Pending Table -->
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="orderSearchInput" placeholder="Search by Order ID, PO Number, Client Name, Sales Person, or Inspector..." oninput="handleSearch()">
+        <button type="button" id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()">✕ Clear</button>
+    </div>
+
+    <!-- Master Pending / Completed Table -->
     <div class="table-card">
         <div class="table-responsive">
             <table class="master-table">
                 <thead>
                     <tr>
                         <th>Deliver Date</th>
+                        <th>Order ID</th>
                         <th>PO Number</th>
                         <th>Client Name</th>
                         <th>Inspection Type</th>
                         <th>Sales Person</th>
-                        <th>MTC Req</th>
+                        <th>MTC Req / Inspector</th>
                     </tr>
                 </thead>
                 <tbody id="ordersTableBody">
-                    <tr><td colspan="6" class="empty-hint">Loading inspection orders...</td></tr>
+                    <tr><td colspan="7" class="empty-hint">Loading inspection orders...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -137,7 +161,7 @@
 
         <div class="stats-grid">
             <div class="stat-box highlight">
-                <div class="stat-label">PO Number & Date</div>
+                <div class="stat-label">Order ID / PO & Date</div>
                 <div class="stat-val" id="dispPoInfo">-</div>
             </div>
             <div class="stat-box">
@@ -227,18 +251,38 @@
 </div>
 
 <script>
-    // ⚠️ PASTE YOUR ACTIVE INSPECTION APPS SCRIPT DEPLOYMENT URL HERE
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzIebqHa4gNolDebzfUH7jSwK-uU-PZVNXaBhJMateZS2rz5OdmCZZu83huOLtMbN2B/exec";		
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzGZ9C1oR4aAsEUuxy16r__ahKvz3V97Y9tQ3jdbXwvftl4Cpst87f3-k6iN5_y7NE/exec";
 
     let pendingList = [];
     let completedList = [];
     let currentTab = "pending";
     let selectedOrder = null;
-    let selectedIndex = -1;
     let activeDriveLink = "";
 
     function updateClock() { document.getElementById('liveClock').textContent = new Date().toLocaleString(); }
     setInterval(updateClock, 1000); updateClock();
+
+    // Converts dd-MM-yyyy -> yyyy-MM-dd so <input type="date"> populates properly
+    function toInputDateValue(str) {
+        if (!str || str === "-") return "";
+        const s = str.toString().split("T")[0].trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
+            const p = s.split("-");
+            return `${p[2]}-${p[1]}-${p[0]}`;
+        }
+        return "";
+    }
+
+    function formatDisplayDate(str) {
+        if (!str || str === "-") return "-";
+        const s = str.toString().split("T")[0].trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+            const p = s.split("-");
+            return `${p[2]}-${p[1]}-${p[0]}`;
+        }
+        return s;
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         const savedName = localStorage.getItem("inspection_filled_by");
@@ -260,8 +304,8 @@
                 document.getElementById('completedCount').textContent = completedList.length;
                 renderTable();
             })
-            .catch(err => {
-                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Failed to load data.</td></tr>`;
+            .catch(() => {
+                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Failed to load data.</td></tr>`;
             });
     }
 
@@ -273,48 +317,80 @@
         renderTable();
     }
 
+    function handleSearch() {
+        const q = document.getElementById('orderSearchInput').value.trim();
+        document.getElementById('searchClearBtn').style.display = q ? 'inline-block' : 'none';
+        renderTable();
+    }
+
+    function clearSearch() {
+        document.getElementById('orderSearchInput').value = '';
+        document.getElementById('searchClearBtn').style.display = 'none';
+        renderTable();
+    }
+
+    function getFilteredList() {
+        const list = currentTab === 'pending' ? pendingList : completedList;
+        const q = document.getElementById('orderSearchInput').value.trim().toLowerCase();
+        if (!q) return list;
+
+        return list.filter(order => {
+            const haystack = [
+                order.orderId || "",
+                order.poNumber || "",
+                order.client || "",
+                order.salesPerson || "",
+                order.inspectionType || "",
+                order.inspectorName || ""
+            ].join(" ").toLowerCase();
+            return haystack.includes(q);
+        });
+    }
+
     function renderTable() {
         const tbody = document.getElementById('ordersTableBody');
-        const list = currentTab === 'pending' ? pendingList : completedList;
+        const list = getFilteredList();
 
         if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="empty-hint">No ${currentTab} orders found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-hint">No matching ${currentTab} orders found.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = '';
-        list.forEach((order, index) => {
+        list.forEach((order) => {
+            const lastCol = currentTab === 'completed'
+                ? `<span style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:4px; font-weight:700;">${order.inspectorName || "-"}</span>`
+                : (order.mtcRequirement || "-");
+
             const tr = document.createElement('tr');
+            if (selectedOrder && selectedOrder === order) tr.classList.add('selected');
             tr.innerHTML = `
                 <td><b>${order.deliveryDate || "-"}</b></td>
+                <td><b>${order.orderId || "-"}</b></td>
                 <td><b>${order.poNumber || "-"}</b></td>
                 <td>${order.client}</td>
                 <td><span style="background:var(--primary-light); color:var(--primary); padding:3px 8px; border-radius:4px; font-weight:700;">${order.inspectionType}</span></td>
                 <td>${order.salesPerson}</td>
-                <td>${order.mtcRequirement || "-"}</td>
+                <td>${lastCol}</td>
             `;
-            tr.onclick = () => selectRow(index, tr);
+            tr.onclick = () => selectOrder(order, tr);
             tbody.appendChild(tr);
         });
     }
 
-    // Smart Unpacker for Legacy Clamped Data
     function expandLegacyItems(itemList) {
         if (!itemList || itemList.length === 0) return [];
         let expanded = [];
         itemList.forEach(it => {
             let sizeStr = it.size || "-";
             if (sizeStr.includes('|') || sizeStr.includes('\n') || (it.qty && it.qty.includes(',')) || (it.pcs && it.pcs.includes(','))) {
-                
                 let sizesArr = sizeStr.split(/\||\n/).map(s => s.replace('•', '').trim()).filter(Boolean);
-                let pcsArr = (it.pcs || "").split(/\||,|\n/).map(s => s.trim()).filter(Boolean);
-                let qtyArr = (it.qty || "").split(/\||,|\n/).map(s => s.trim()).filter(Boolean);
+                let pcsArr   = (it.pcs || "").split(/\||,|\n/).map(s => s.trim()).filter(Boolean);
+                let qtyArr   = (it.qty || "").split(/\||,|\n/).map(s => s.trim()).filter(Boolean);
                 let gradeArr = (it.grade || "").split(/\||\n/).map(s => s.trim()).filter(Boolean);
-                let makeArr = (it.make || "").split(/\||\n/).map(s => s.trim()).filter(Boolean);
+                let makeArr  = (it.make || "").split(/\||\n/).map(s => s.trim()).filter(Boolean);
 
-                let maxLen = Math.max(sizesArr.length, pcsArr.length, qtyArr.length);
-                if (maxLen === 0) maxLen = 1;
-
+                let maxLen = Math.max(sizesArr.length, pcsArr.length, qtyArr.length) || 1;
                 for (let i = 0; i < maxLen; i++) {
                     expanded.push({
                         size: sizesArr[i] || sizesArr[0] || "-",
@@ -331,27 +407,23 @@
         return expanded;
     }
 
-    function selectRow(index, rowEl) {
+    function selectOrder(order, rowEl) {
         document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
         rowEl.classList.add('selected');
 
-        selectedIndex = index;
-        const list = currentTab === 'pending' ? pendingList : completedList;
-        selectedOrder = list[index];
+        selectedOrder = order;
 
-        document.getElementById('dispPoInfo').textContent = `${selectedOrder.poNumber || "-"} (${selectedOrder.poDate || "-"})`;
-        document.getElementById('dispClient').textContent = selectedOrder.client;
-        document.getElementById('dispInspection').textContent = selectedOrder.inspectionType || "-";
-        document.getElementById('dispDelivery').textContent = selectedOrder.deliveryDate || "-";
+        document.getElementById('dispPoInfo').textContent = `${order.orderId ? order.orderId + ' • ' : ''}${order.poNumber || "-"} (${order.poDate || "-"})`;
+        document.getElementById('dispClient').textContent = order.client;
+        document.getElementById('dispInspection').textContent = order.inspectionType || "-";
+        document.getElementById('dispDelivery').textContent = order.deliveryDate || "-";
         
-        document.getElementById('dispMtcReq').textContent = selectedOrder.mtcRequirement || "-";
-        document.getElementById('dispEndMtc').textContent = selectedOrder.endorsementMtc || "-";
-        document.getElementById('dispTerms').textContent = selectedOrder.paymentTerms || "-";
+        document.getElementById('dispMtcReq').textContent = order.mtcRequirement || "-";
+        document.getElementById('dispEndMtc').textContent = order.endorsementMtc || "-";
+        document.getElementById('dispTerms').textContent = order.paymentTerms || "-";
 
         const itemTbody = document.getElementById('itemsTableBody');
-        
-        // Unpack into expanded items for clean display
-        selectedOrder.expandedItems = expandLegacyItems(selectedOrder.itemList);
+        selectedOrder.expandedItems = expandLegacyItems(order.itemList);
         const renderItems = selectedOrder.expandedItems;
 
         if (renderItems.length > 0) {
@@ -359,9 +431,7 @@
             document.getElementById('dispItemCount').textContent = `${renderItems.length} ITEM${renderItems.length > 1 ? 'S' : ''}`;
             renderItems.forEach((it, i) => {
                 let combinedGradeMake = it.grade || "-";
-                if (it.make && it.make !== "-") {
-                    combinedGradeMake += ` (${it.make})`;
-                }
+                if (it.make && it.make !== "-") combinedGradeMake += ` (${it.make})`;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${i + 1}</td>
@@ -373,31 +443,19 @@
                 itemTbody.appendChild(tr);
             });
         } else {
-            document.getElementById('dispItemCount').textContent = `1 ITEM`;
-            let combinedGradeMake = selectedOrder.grade || "-";
-            if (selectedOrder.make && selectedOrder.make !== "-") {
-                combinedGradeMake += ` (${selectedOrder.make})`;
-            }
-            itemTbody.innerHTML = `
-                <tr>
-                    <td>1</td>
-                    <td><b>${selectedOrder.confirmSizes || "-"}</b></td>
-                    <td>${selectedOrder.pieces || "-"}</td>
-                    <td>${selectedOrder.quantity || "-"}</td>
-                    <td>${combinedGradeMake}</td>
-                </tr>
-            `;
+            document.getElementById('dispItemCount').textContent = `0 ITEMS`;
+            itemTbody.innerHTML = `<tr><td colspan="5" class="empty-hint" style="padding: 16px;">No itemized records found in Master sheet for this order.</td></tr>`;
         }
 
         const poDocContainer = document.getElementById('poDocContainer');
-        const poLink = selectedOrder.poDocLink || "";
+        const poLink = order.poDocLink || "";
         if (poLink.startsWith("http")) {
             poDocContainer.innerHTML = `<a href="${poLink}" target="_blank" class="link-btn">📄 View Attached PO Document</a>`;
         } else {
             poDocContainer.innerHTML = `<span class="no-doc">No PO Document Attached</span>`;
         }
 
-        activeDriveLink = selectedOrder.itpFileLink && selectedOrder.itpFileLink.startsWith("http") ? selectedOrder.itpFileLink : "";
+        activeDriveLink = order.itpFileLink && order.itpFileLink.startsWith("http") ? order.itpFileLink : "";
         const linkEl = document.getElementById('itpSavedLinkText');
         if (activeDriveLink) {
             linkEl.style.display = "block";
@@ -407,11 +465,11 @@
         }
 
         if (currentTab === 'completed') {
-            document.getElementById('formPlanningDate').value = selectedOrder.planningDate || '';
-            document.getElementById('formInspectorName').value = selectedOrder.inspectorName || '';
-            document.getElementById('formRemark').value = selectedOrder.remark || '';
-            if (selectedOrder.filledBy && selectedOrder.filledBy !== "-") {
-                document.getElementById('filledByInput').value = selectedOrder.filledBy;
+            document.getElementById('formPlanningDate').value = toInputDateValue(order.planningDate);
+            document.getElementById('formInspectorName').value = order.inspectorName && order.inspectorName !== "-" ? order.inspectorName : '';
+            document.getElementById('formRemark').value = order.remark && order.remark !== "-" ? order.remark : '';
+            if (order.filledBy && order.filledBy !== "-") {
+                document.getElementById('filledByInput').value = order.filledBy;
             }
             document.getElementById('btnSave').style.display = "none";
         } else {
@@ -425,7 +483,6 @@
 
     function resetWorkspace() {
         selectedOrder = null;
-        selectedIndex = -1;
         activeDriveLink = "";
         
         document.getElementById('dispPoInfo').textContent = "-";
@@ -446,7 +503,7 @@
         document.getElementById('formItpFile').value = '';
         document.getElementById('itpSavedLinkText').style.display = 'none';
         
-        document.getElementById('btnSave').style.display = "block";
+        document.getElementById('btnSave').style.display = currentTab === 'pending' ? "block" : "none";
         document.querySelectorAll('#ordersTableBody tr').forEach(r => r.classList.remove('selected'));
     }
 
@@ -460,7 +517,7 @@
     }
 
     async function saveToSheet() {
-        if (!selectedOrder || selectedIndex === -1) {
+        if (!selectedOrder) {
             return alert("Please select an order from the table first.");
         }
 
@@ -477,38 +534,35 @@
 
         const timestamp = new Date().toLocaleString();
         const statusMsg = document.getElementById('statusMsg');
+        const btnSave = document.getElementById('btnSave');
 
         statusMsg.style.display = "block";
         statusMsg.style.color = "#4a5568";
         statusMsg.textContent = "Uploading to Drive & Saving to Sheet...";
+        btnSave.disabled = true;
 
         let itpFileData = null;
         if (fileInput.files.length > 0) {
             try { itpFileData = await getBase64(fileInput.files[0]); } catch (err) {}
         }
 
-        // PERFECTLY MAPPED ARRAY to match Inspection Sheet headers!
         const rowData = [
-            timestamp,                           // 1. Timestamp
-            selectedOrder.poNumber || "-",       // 2. PO Number (Fixed Placement!)
-            selectedOrder.client,                // 3. Client Name
-            selectedOrder.poDate || "-",         // 4. PO Date
-            selectedOrder.salesPerson,           // 5. Sales Person
-            selectedOrder.deliveryDate,          // 6. DELIVER DATE
-            selectedOrder.inspectionType,        // 7. Inspection / Testing
-            "-", // 8. legacy make
-            "-", // 9. legacy grade
-            "-", // 10. legacy sizes
-            "-", // 11. legacy pieces
-            "-", // 12. legacy quantity
-            selectedOrder.paymentTerms || "-",   // 13. Payment terms
-            selectedOrder.mtcRequirement || "-", // 14. MTC Requirement
-            selectedOrder.endorsementMtc || "-", // 15. Endorsement MTC
-            planningDate,                        // 16. Planning Date
-            inspectorName,                       // 17. Inspector Name
-            remark,                              // 18. Remark
-            selectedOrder.poDocLink || "-"       // 19. PO / Ref Document
-        ]; // The backend script automatically appends the ITP Link & Filled By
+            timestamp,
+            selectedOrder.poNumber || "-",
+            selectedOrder.client,
+            selectedOrder.poDate || "-",
+            selectedOrder.salesPerson,
+            selectedOrder.deliveryDate,
+            selectedOrder.inspectionType,
+            "-", "-", "-", "-", "-",
+            selectedOrder.paymentTerms || "-",
+            selectedOrder.mtcRequirement || "-",
+            selectedOrder.endorsementMtc || "-",
+            planningDate,
+            inspectorName,
+            remark,
+            selectedOrder.poDocLink || "-"
+        ];
 
         try {
             const response = await fetch(WEB_APP_URL, {
@@ -517,11 +571,14 @@
                 body: JSON.stringify({
                     inspectionRecord: rowData,
                     itpFile: itpFileData,
-                    filledBy: filledBy
+                    filledBy: filledBy,
+                    orderId: selectedOrder.orderId || ""
                 })
             });
 
             const returnedText = await response.text();
+            if (returnedText.includes("Error")) throw new Error(returnedText);
+
             if (returnedText && returnedText.startsWith("http")) {
                 activeDriveLink = returnedText.trim();
                 const linkEl = document.getElementById('itpSavedLinkText');
@@ -533,20 +590,26 @@
             statusMsg.textContent = "Saved successfully! You can now share on WhatsApp.";
 
             const savedItem = { 
-                ...selectedOrder, timestamp, planningDate, inspectorName, remark, 
-                itpFileLink: activeDriveLink || "None", filledBy: filledBy
+                ...selectedOrder, timestamp,
+                planningDate: formatDisplayDate(planningDate),
+                inspectorName, remark,
+                itpFileLink: activeDriveLink || "None",
+                filledBy
             };
             completedList.unshift(savedItem);
-            pendingList.splice(selectedIndex, 1);
+
+            const idxInPending = pendingList.indexOf(selectedOrder);
+            if (idxInPending !== -1) pendingList.splice(idxInPending, 1);
 
             document.getElementById('pendingCount').textContent = pendingList.length;
             document.getElementById('completedCount').textContent = completedList.length;
 
             renderTable();
-            setTimeout(() => { statusMsg.style.display = "none"; }, 4000);
+            setTimeout(() => { statusMsg.style.display = "none"; btnSave.disabled = false; }, 4000);
         } catch (err) {
             statusMsg.style.color = "#e53e3e";
-            statusMsg.textContent = "Failed to save.";
+            statusMsg.textContent = "Failed to save: " + err.message;
+            btnSave.disabled = false;
         }
     }
 
@@ -554,12 +617,12 @@
         if (!selectedOrder) return alert("Please select an order from the table first.");
 
         const filledBy = document.getElementById('filledByInput').value.trim();
-        const planningDate = document.getElementById('formPlanningDate').value;
-        const inspectorName = document.getElementById('formInspectorName').value.trim();
-        const remark = document.getElementById('formRemark').value.trim();
+        const planningDate = document.getElementById('formPlanningDate').value || selectedOrder.planningDate;
+        const inspectorName = document.getElementById('formInspectorName').value.trim() || selectedOrder.inspectorName;
+        const remark = document.getElementById('formRemark').value.trim() || selectedOrder.remark;
         const fileInput = document.getElementById('formItpFile');
 
-        if (!planningDate || !inspectorName || !remark) {
+        if (!planningDate || planningDate === "-" || !inspectorName || inspectorName === "-" || !remark || remark === "-") {
             return alert("Please enter Planning Date, Inspector Name, and Remark before sharing.");
         }
 
@@ -569,6 +632,7 @@
 
         let msg = `*🔍 Inspection / Testing Assignment*\n_${new Date().toLocaleString()}_\n\n`;
         if (filledBy) msg += `*✍️ Assigned By:* ${filledBy}\n`;
+        if (selectedOrder.orderId) msg += `*🆔 Order ID:* ${selectedOrder.orderId}\n`;
         msg += `*PO Number:* ${selectedOrder.poNumber || "-"}\n`;
         msg += `*Client Name:* ${selectedOrder.client}\n`;
         msg += `*PO Date:* ${selectedOrder.poDate || "-"}\n`;
@@ -581,9 +645,7 @@
             msg += `*📦 Item Specifications (${unpackedItems.length}):*\n`;
             unpackedItems.forEach((it, idx) => {
                 let combinedGradeMake = it.grade || "-";
-                if (it.make && it.make !== "-") {
-                    combinedGradeMake += ` (${it.make})`;
-                }
+                if (it.make && it.make !== "-") combinedGradeMake += ` (${it.make})`;
                 msg += `\n*Item #${idx + 1}:*\n`;
                 if (it.size) msg += `• Size: ${it.size}\n`;
                 if (it.pcs) msg += `• Pieces: ${it.pcs}\n`;
@@ -596,7 +658,7 @@
         msg += `*Payment Terms:* ${selectedOrder.paymentTerms || "-"}\n`;
         msg += `*MTC Requirement:* ${selectedOrder.mtcRequirement || "-"}\n`;
         msg += `*Endorsement MTC:* ${selectedOrder.endorsementMtc || "-"}\n\n`;
-        msg += `*📅 Planning Date:* ${planningDate}\n`;
+        msg += `*📅 Planning Date:* ${formatDisplayDate(planningDate)}\n`;
         msg += `*👤 Inspector Name:* ${inspectorName}\n`;
         msg += `*📝 Remark:* ${remark}\n`;
 
