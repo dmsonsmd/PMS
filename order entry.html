@@ -41,24 +41,39 @@
         .col-yn { width: 10%; text-align: center; }
         .task-input { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; font-family: inherit; border-radius: 4px; box-sizing: border-box; font-size: 13.5px; }
         .task-input:focus { outline: none; border-color: #2563eb; }
+        tr.item-row-dimmed { opacity: 0.45; pointer-events: none; background-color: #f8fafc; }
+
+        .mode-banner { display: none; background: #fffbeb; border: 1px solid #f59e0b; color: #92400e; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; justify-content: space-between; align-items: center; }
         
         .button-container { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-        .btn { flex: 1; min-width: 170px; padding: 12px; color: white; font-size: 14.5px; font-weight: 700; border: none; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+        .btn { flex: 1; min-width: 160px; padding: 12px; color: white; font-size: 14px; font-weight: 700; border: none; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
         .save-btn { background-color: #2563eb; }
         .save-btn:hover { background-color: #1d4ed8; }
         .update-btn { background-color: #d97706; display: none; }
         .update-btn:hover { background-color: #b45309; }
+        .update-all-btn { background-color: #7c3aed; display: none; }
+        .update-all-btn:hover { background-color: #6d28d9; }
         .wa-btn { background-color: #25D366; }
         .wa-btn:hover { background-color: #1ebe5d; }
-        .reset-btn { background-color: #64748b; flex: 0.5; min-width: 120px; }
+        .reset-btn { background-color: #64748b; flex: 0.5; min-width: 110px; }
         .reset-btn:hover { background-color: #475569; }
 
         .queue-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-top: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: none; }
-        .queue-title { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; text-transform: uppercase; display: flex; justify-content: space-between; }
-        .queue-item { font-size: 13px; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #475569; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; cursor: pointer; }
+        .queue-title { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 10px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .queue-actions { display: flex; gap: 8px; align-items: center; }
+        .btn-mini { padding: 5px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; cursor: pointer; }
+        .btn-mini:hover { background: #e2e8f0; }
+        .btn-mini.active-all { background: #7c3aed; color: #ffffff; border-color: #7c3aed; }
+        .btn-mini.add-mode { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+
+        .queue-item { font-size: 13px; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #475569; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 6px; cursor: pointer; }
         .queue-item:hover { background: #eff6ff; }
         .queue-item.editing { background: #fef3c7; border: 1px solid #f59e0b; }
+        .queue-item.editing-all { background: #f3e8ff; border: 1px solid #a855f7; }
         .item-id-pill { background: #e2e8f0; color: #0f172a; padding: 2px 7px; border-radius: 4px; font-size: 11.5px; font-weight: 700; margin-right: 6px; }
+        .queue-item-right { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+        .btn-delete-item { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 5px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .btn-delete-item:hover { background: #dc2626; color: #ffffff; }
     </style>
 </head>
 <body>
@@ -74,6 +89,12 @@
         <div class="search-dropdown" id="searchResultsDropdown"></div>
     </div>
     
+    <!-- Edit Mode Banner -->
+    <div class="mode-banner" id="modeBanner">
+        <span id="modeBannerText"></span>
+        <button type="button" class="btn-mini" onclick="switchToAddNewItemMode()">✕ Cancel Edit / Add New Item</button>
+    </div>
+
     <div class="header-section">
         <div class="timestamp-bar">
             <div class="timestamp" id="datetimeDisplay">Date & Time: Loading...</div>
@@ -103,12 +124,12 @@
             <tr><th class="col-sr">Sr. no</th><th class="col-checklist">Checklist Item</th><th class="col-input">Details / Input</th><th class="col-yn">Y / N</th></tr>
         </thead>
         <tbody>
-            <tr data-field-key="confirmSizes"><td class="col-sr">1</td><td>Confirm sizes</td><td><input type="text" class="task-input" id="inputSizes" placeholder="e.g. 10MM X 2500 X 6000"></td><td class="col-yn"><input type="checkbox"></td></tr>
-            <tr data-field-key="pieces"><td class="col-sr">2</td><td>Pieces</td><td><input type="text" class="task-input" id="inputPieces" placeholder="e.g. 1"></td><td class="col-yn"><input type="checkbox"></td></tr>
-            <tr data-field-key="quantity"><td class="col-sr">3</td><td>Quantity</td><td><input type="text" class="task-input" id="inputQuantity" placeholder="e.g. 1200 MT/KG"></td><td class="col-yn"><input type="checkbox"></td></tr>
-            <tr data-field-key="grade"><td class="col-sr">4</td><td>Grade</td><td><input type="text" class="task-input" id="inputGrade" placeholder="e.g. SA516 GR70"></td><td class="col-yn"><input type="checkbox"></td></tr>
-            <tr data-field-key="make"><td class="col-sr">5</td><td>Make</td><td><input type="text" class="task-input" id="inputMake" placeholder="e.g. AMNS / SAIL"></td><td class="col-yn"><input type="checkbox"></td></tr>
-            <tr data-field-key="priceRate"><td class="col-sr">6</td><td>Confirm Price / Rate</td><td><input type="text" class="task-input" id="inputPriceRate" placeholder="e.g. 88000"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr class="per-item-row" data-field-key="confirmSizes"><td class="col-sr">1</td><td>Confirm sizes</td><td><input type="text" class="task-input" id="inputSizes" placeholder="e.g. 10MM X 2500 X 6000"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr class="per-item-row" data-field-key="pieces"><td class="col-sr">2</td><td>Pieces</td><td><input type="text" class="task-input" id="inputPieces" placeholder="e.g. 1"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr class="per-item-row" data-field-key="quantity"><td class="col-sr">3</td><td>Quantity</td><td><input type="text" class="task-input" id="inputQuantity" placeholder="e.g. 1200 MT/KG"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr class="per-item-row" data-field-key="grade"><td class="col-sr">4</td><td>Grade</td><td><input type="text" class="task-input" id="inputGrade" placeholder="e.g. SA516 GR70"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr class="per-item-row" data-field-key="make"><td class="col-sr">5</td><td>Make</td><td><input type="text" class="task-input" id="inputMake" placeholder="e.g. AMNS / SAIL"></td><td class="col-yn"><input type="checkbox"></td></tr>
+            <tr class="per-item-row" data-field-key="priceRate"><td class="col-sr">6</td><td>Confirm Price / Rate</td><td><input type="text" class="task-input" id="inputPriceRate" placeholder="e.g. 88000"></td><td class="col-yn"><input type="checkbox"></td></tr>
             <tr data-field-key="paymentTerms">
                 <td class="col-sr">7</td><td>Payment terms</td>
                 <td>
@@ -128,7 +149,7 @@
                 <td><input type="text" class="task-input" id="inputTotalValue" placeholder="Overall Total (e.g. 896080)"></td>
                 <td class="col-yn"><input type="checkbox"></td>
             </tr>
-            <tr data-field-key="itemValue">
+            <tr class="per-item-row" data-field-key="itemValue">
                 <td class="col-sr">10</td>
                 <td>ITEM VALUE (Current Item)</td>
                 <td><input type="text" class="task-input" id="inputItemValue" placeholder="This Item's Value (e.g. 105600)"></td>
@@ -168,11 +189,14 @@
         </tbody>
     </table>
 
-    <!-- Clickable Items Queue -->
+    <!-- Clickable Items Queue with Select All & Remove -->
     <div class="queue-card" id="poQueueCard">
         <div class="queue-title">
             <span>📋 Items in this Order (<span id="queueCount">0</span>)</span>
-            <span style="font-weight: 500; font-size: 11.5px; color: #64748b;">Click any item to edit it</span>
+            <div class="queue-actions">
+                <button type="button" class="btn-mini" id="btnSelectAll" onclick="toggleSelectAllItems()">☑️ Select All Items (Edit PO / Order)</button>
+                <button type="button" class="btn-mini add-mode" onclick="switchToAddNewItemMode()">➕ Add New Item</button>
+            </div>
         </div>
         <div id="queueList"></div>
     </div>
@@ -180,18 +204,20 @@
     <div class="button-container">
         <button id="btnSave" class="btn save-btn" onclick="saveToSheets('append')">💾 Save New Item</button>
         <button id="btnUpdate" class="btn update-btn" onclick="saveToSheets('update')">✏️ Update Selected Item</button>
+        <button id="btnUpdateAll" class="btn update-all-btn" onclick="saveToSheets('updateAll')">✏️ Update All Items (PO / Order)</button>
         <button id="btnWa" class="btn wa-btn" onclick="shareEntirePOonWhatsApp()">📲 Share on WhatsApp</button>
         <button id="btnReset" class="btn reset-btn" onclick="startNewPO()">🔄 New PO</button>
     </div>
     <p id="statusMsg" style="display: none; text-align: center; font-weight: bold; margin-top: 15px;"></p>
 
     <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwxJ0EH1gkD_jiOBW-GjH4UbHVusKNGU_qwHyyCQDFBf9teOjRqIc2jrJXSbIJ0mYgK8w/exec";
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbxjkaa-nULOFUg_o1_8nym7-_BJD5rvOt31lTZ98_A0d56Z5y2hEfEBQrr-W5rOGmLr_w/exec";
         
         let savedDriveLink = ""; 
         let poItemsList = []; 
         let currentOrderId = "";
         let editingItemId = "";
+        let isEditingAll = false;
         let groupedSearchResults = {};
         let cachedHeaders = [];
 
@@ -222,6 +248,61 @@
             }
         });
 
+        function updateEditModeUI() {
+            const banner = document.getElementById('modeBanner');
+            const bannerText = document.getElementById('modeBannerText');
+            const btnSave = document.getElementById('btnSave');
+            const btnUpdate = document.getElementById('btnUpdate');
+            const btnUpdateAll = document.getElementById('btnUpdateAll');
+            const btnSelectAll = document.getElementById('btnSelectAll');
+            const perItemRows = document.querySelectorAll('tr.per-item-row');
+
+            perItemRows.forEach(r => r.classList.toggle('item-row-dimmed', isEditingAll));
+            btnSelectAll.classList.toggle('active-all', isEditingAll);
+
+            if (isEditingAll) {
+                banner.style.display = 'flex';
+                bannerText.textContent = `Editing ALL ${poItemsList.length} items of ${currentOrderId} — Edit PO Number, Client, Dates, Terms, or Total Value and click "Update All Items".`;
+                btnSave.style.display = 'none';
+                btnUpdate.style.display = 'none';
+                btnUpdateAll.style.display = 'block';
+            } else if (editingItemId) {
+                banner.style.display = 'flex';
+                bannerText.textContent = `Editing single item: ${editingItemId} — You can update item details or PO Number.`;
+                btnSave.style.display = 'block';
+                btnUpdate.style.display = 'block';
+                btnUpdate.textContent = `✏️ Update ${editingItemId}`;
+                btnUpdateAll.style.display = 'none';
+            } else {
+                banner.style.display = 'none';
+                btnSave.style.display = 'block';
+                btnUpdate.style.display = 'none';
+                btnUpdateAll.style.display = 'none';
+            }
+        }
+
+        function toggleSelectAllItems() {
+            if (!currentOrderId) {
+                return alert("Select All is available for saved orders with an Order ID.");
+            }
+            isEditingAll = !isEditingAll;
+            if (isEditingAll) {
+                editingItemId = "";
+                clearItemInputs();
+            }
+            updateEditModeUI();
+            updateQueueUI();
+        }
+
+        function switchToAddNewItemMode() {
+            isEditingAll = false;
+            editingItemId = "";
+            clearItemInputs();
+            updateEditModeUI();
+            updateQueueUI();
+            document.getElementById('inputSizes').focus();
+        }
+
         async function loadSavedPO() {
             const query = document.getElementById('searchPoInput').value.trim();
             if (!query) return alert("Please enter an Order ID, PO Number, Client, or Sales Person.");
@@ -250,7 +331,6 @@
                 const dateCol   = cachedHeaders.indexOf("po date");
                 const orderCol  = cachedHeaders.indexOf("order id");
 
-                // Group by Order ID if present, otherwise fallback to PO Number
                 groupedSearchResults = {};
                 result.rows.forEach(row => {
                     const ordId = orderCol !== -1 && row[orderCol] ? String(row[orderCol]).trim() : "";
@@ -335,6 +415,7 @@
 
             currentOrderId = orderCol !== -1 && first[orderCol] ? String(first[orderCol]).trim() : "";
             editingItemId = "";
+            isEditingAll = false;
             document.getElementById('orderIdBadge').textContent = currentOrderId ? `Order ID: ${currentOrderId}` : "Order ID: Legacy";
 
             document.getElementById('poNumberInput').value = first[poNumCol] || "";
@@ -378,22 +459,21 @@
             }));
 
             clearItemInputs();
-            document.getElementById('btnSave').style.display = 'block';
-            document.getElementById('btnUpdate').style.display = 'none';
+            updateEditModeUI();
             updateQueueUI();
 
             const statusMsg = document.getElementById('statusMsg');
             statusMsg.style.display = "block";
             statusMsg.style.color = "#16a34a";
-            statusMsg.textContent = `Loaded ${poItemsList.length} item(s). Click any item below to edit it, or enter a new item to add to this order.`;
-            setTimeout(() => { statusMsg.style.display = "none"; }, 4500);
+            statusMsg.textContent = `Loaded ${poItemsList.length} item(s). Click any item to edit, click "Select All" to edit PO/Order details, or enter a new item to add below this order.`;
+            setTimeout(() => { statusMsg.style.display = "none"; }, 5000);
         }
 
-        // Click an item in the queue to load it into the form for editing
         function selectItemForEdit(idx) {
             const it = poItemsList[idx];
             if (!it) return;
 
+            isEditingAll = false;
             editingItemId = it.itemId;
             document.getElementById('inputSizes').value = it.size === "-" ? "" : it.size;
             document.getElementById('inputPieces').value = it.pcs === "-" ? "" : it.pcs;
@@ -403,9 +483,56 @@
             document.getElementById('inputPriceRate').value = it.rate === "-" ? "" : it.rate;
             document.getElementById('inputItemValue').value = it.itemVal === "-" ? "" : it.itemVal;
 
-            document.getElementById('btnUpdate').style.display = 'block';
-            document.getElementById('btnUpdate').textContent = editingItemId ? `✏️ Update ${editingItemId}` : "✏️ Update Item";
+            updateEditModeUI();
             updateQueueUI();
+        }
+
+        async function deleteItem(idx) {
+            const it = poItemsList[idx];
+            if (!it || !it.itemId) {
+                return alert("This item does not have an Item ID and cannot be removed automatically.");
+            }
+            if (!confirm(`Remove ${it.itemId} (${it.size}) from this order? This will delete the row from Google Sheets.`)) {
+                return;
+            }
+
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.style.display = "block";
+            statusMsg.style.color = "#dc2626";
+            statusMsg.textContent = `Removing ${it.itemId}...`;
+
+            try {
+                const response = await fetch(GOOGLE_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'delete',
+                        orderId: currentOrderId,
+                        itemId: it.itemId
+                    })
+                });
+                const resJson = await response.json();
+                if (!resJson.success) throw new Error(resJson.error || "Delete failed");
+
+                poItemsList.splice(idx, 1);
+                if (editingItemId === it.itemId) {
+                    editingItemId = "";
+                    clearItemInputs();
+                }
+                if (poItemsList.length === 0) {
+                    isEditingAll = false;
+                }
+
+                updateEditModeUI();
+                updateQueueUI();
+
+                statusMsg.style.color = "#16a34a";
+                statusMsg.textContent = `Removed ${it.itemId} successfully.`;
+                setTimeout(() => { statusMsg.style.display = "none"; }, 3500);
+            } catch (err) {
+                statusMsg.style.color = "#dc2626";
+                statusMsg.textContent = "Error removing item: " + err.message;
+            }
         }
 
         function clearItemInputs() {
@@ -461,14 +588,20 @@
             if (actionType === 'update' && !editingItemId) {
                 return alert("Please click an item from the list below before updating.");
             }
+            if (actionType === 'updateAll' && !currentOrderId) {
+                return alert("No Order ID loaded for bulk update.");
+            }
 
             const btnSave = document.getElementById('btnSave');
             const btnUpdate = document.getElementById('btnUpdate');
+            const btnUpdateAll = document.getElementById('btnUpdateAll');
             const statusMsg = document.getElementById('statusMsg');
 
-            btnSave.disabled = true; btnUpdate.disabled = true;
+            btnSave.disabled = true; btnUpdate.disabled = true; btnUpdateAll.disabled = true;
             statusMsg.style.color = "#2563eb";
-            statusMsg.textContent = actionType === 'update' ? `Updating ${editingItemId}...` : "Saving new item & generating ID...";
+            statusMsg.textContent = actionType === 'updateAll'
+                ? `Updating all items in ${currentOrderId}...`
+                : (actionType === 'update' ? `Updating ${editingItemId}...` : "Saving new item...");
             statusMsg.style.display = "block";
 
             const fileInput = document.getElementById('fileUpload');
@@ -533,37 +666,46 @@
                 if (!resJson.success) throw new Error(resJson.error || "Save failed");
 
                 if (resJson.fileLink && resJson.fileLink.startsWith("http")) savedDriveLink = resJson.fileLink;
-                currentOrderId = resJson.orderId;
-                document.getElementById('orderIdBadge').textContent = `Order ID: ${currentOrderId}`;
-
-                const itemObj = {
-                    itemId: resJson.itemId,
-                    size: confirmSizes, pcs: pieces, qty: qty,
-                    grade: grade, make: make, rate: priceRate, itemVal: itemValue
-                };
-
-                if (actionType === 'update') {
-                    const idx = poItemsList.findIndex(x => x.itemId === resJson.itemId);
-                    if (idx !== -1) poItemsList[idx] = itemObj;
-                    editingItemId = "";
-                    btnUpdate.style.display = 'none';
-                } else {
-                    poItemsList.push(itemObj);
+                if (resJson.orderId) {
+                    currentOrderId = resJson.orderId;
+                    document.getElementById('orderIdBadge').textContent = `Order ID: ${currentOrderId}`;
                 }
 
-                updateQueueUI();
-                clearItemInputs();
+                if (actionType === 'updateAll') {
+                    isEditingAll = false;
+                    statusMsg.style.color = "#16a34a";
+                    statusMsg.textContent = `Updated all ${resJson.updatedCount || poItemsList.length} item(s) in ${currentOrderId} successfully!`;
+                } else {
+                    const itemObj = {
+                        itemId: resJson.itemId,
+                        size: confirmSizes, pcs: pieces, qty: qty,
+                        grade: grade, make: make, rate: priceRate, itemVal: itemValue
+                    };
 
-                statusMsg.style.color = "#16a34a"; 
-                statusMsg.textContent = actionType === 'update'
-                    ? `Updated ${resJson.itemId} successfully!`
-                    : `Saved ${resJson.itemId} successfully!`;
-                
-                setTimeout(() => { statusMsg.style.display = "none"; btnSave.disabled = false; btnUpdate.disabled = false; }, 3500);
+                    if (actionType === 'update') {
+                        const idx = poItemsList.findIndex(x => x.itemId === resJson.itemId);
+                        if (idx !== -1) poItemsList[idx] = itemObj;
+                        editingItemId = "";
+                    } else {
+                        poItemsList.push(itemObj);
+                    }
+                    clearItemInputs();
+                    statusMsg.style.color = "#16a34a"; 
+                    statusMsg.textContent = actionType === 'update'
+                        ? `Updated ${resJson.itemId} successfully!`
+                        : `Saved ${resJson.itemId} below ${currentOrderId} successfully!`;
+                }
+
+                updateEditModeUI();
+                updateQueueUI();
+                setTimeout(() => {
+                    statusMsg.style.display = "none";
+                    btnSave.disabled = false; btnUpdate.disabled = false; btnUpdateAll.disabled = false;
+                }, 3500);
             } catch (error) {
                 statusMsg.style.color = "#dc2626";
                 statusMsg.textContent = "Error: " + error.message;
-                btnSave.disabled = false; btnUpdate.disabled = false;
+                btnSave.disabled = false; btnUpdate.disabled = false; btnUpdateAll.disabled = false;
             }
         }
 
@@ -577,15 +719,21 @@
             
             if (count > 0) {
                 card.style.display = 'block';
-                listDiv.innerHTML = poItemsList.map((it, idx) => `
-                    <div class="queue-item ${editingItemId && it.itemId === editingItemId ? 'editing' : ''}" onclick="selectItemForEdit(${idx})">
-                        <span>
-                            <span class="item-id-pill">${it.itemId || ('#' + (idx + 1))}</span>
-                            ${it.size} | Pcs: ${it.pcs} | Qty: ${it.qty} | ${it.grade} (${it.make})
-                        </span>
-                        <span style="font-weight: 700; color: #2563eb;">₹${it.itemVal || it.rate}</span>
-                    </div>
-                `).join('');
+                listDiv.innerHTML = poItemsList.map((it, idx) => {
+                    const rowClass = isEditingAll ? 'editing-all' : (editingItemId && it.itemId === editingItemId ? 'editing' : '');
+                    return `
+                        <div class="queue-item ${rowClass}" onclick="selectItemForEdit(${idx})">
+                            <span>
+                                <span class="item-id-pill">${it.itemId || ('#' + (idx + 1))}</span>
+                                ${it.size} | Pcs: ${it.pcs} | Qty: ${it.qty} | ${it.grade} (${it.make})
+                            </span>
+                            <div class="queue-item-right">
+                                <span style="font-weight: 700; color: #2563eb;">₹${it.itemVal || it.rate}</span>
+                                <button type="button" class="btn-delete-item" title="Remove Item" onclick="event.stopPropagation(); deleteItem(${idx})">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             } else {
                 card.style.display = 'none';
             }
@@ -654,6 +802,7 @@
         function startNewPO() {
             currentOrderId = "";
             editingItemId = "";
+            isEditingAll = false;
             poItemsList = [];
             savedDriveLink = "";
             document.getElementById('orderIdBadge').textContent = "Order ID: New";
@@ -666,9 +815,8 @@
             document.getElementById('inputTotalValue').value = "";
             clearItemInputs();
             document.querySelectorAll('#checklistTable input[type="checkbox"]').forEach(cb => cb.checked = false);
-            document.getElementById('btnSave').style.display = 'block';
-            document.getElementById('btnUpdate').style.display = 'none';
             document.getElementById('searchResultsDropdown').style.display = 'none';
+            updateEditModeUI();
             updateQueueUI();
         }
     </script>
